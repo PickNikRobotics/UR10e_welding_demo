@@ -1,0 +1,24 @@
+# Flange to welding gun calibration
+flange_welding_gun:
+  x: 0
+  y: 0
+  z: 0
+  roll: 0
+  pitch: 0
+  yaw: 3.1412569
+# Welding Gun TCP calibration
+tcp_welding_gun:
+  x: 0 
+  y: -0.0106
+  z: 0.4194
+  roll: 0.04179784
+  pitch: -0.76240457
+  yaw: -1.60682706
+# Sensor TCP calibration
+tcp_sensor:
+  x:  0.08713666948534148
+  y:  -0.13746584368098683
+  z:  0.1788421715796334
+  roll:  -0.009598704388933094
+  pitch:  -0.7754616451256843
+  yaw:  -1.5584915493819298

@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro" name="ipa_ur_demo">
+
+   <xacro:arg name="prefix" default="" />
+
+  <xacro:arg name="name" default="ipa_ur_demo"/>
+
+  <!-- Endeffector name -->
+  <xacro:arg name="endeffector" default="welding_gun_lorch_scancontrol" />
+  <!-- <xacro:property name="endeffector" value="$(arg endeffector)" /> -->
+
+  <!-- Robot model -->
+  <xacro:arg name="robot_model" default="ur10e" />
+  <!-- <xacro:property name="robot_model" value="$(arg robot_model)" /> -->
+
+  <!-- Calibration file -->
+  <xacro:arg name="calibration_config_file" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg endeffector).yaml"/>
+
+    <!-- UR Macro Parameters-->
+   <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/$(arg robot_model)/joint_limits.yaml" />
+   <xacro:arg name="kinematics_params" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg robot_model).yaml" />
+   <xacro:arg name="physical_params" default="$(find ur_description)/config/$(arg robot_model)/physical_parameters.yaml" />
+   <xacro:arg name="visual_params" default="$(find ur_description)/config/$(arg robot_model)/visual_parameters.yaml" />
+   <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
+   <xacro:arg name="safety_limits" default="false"/>
+   <xacro:arg name="safety_pos_margin" default="0.15"/>
+   <xacro:arg name="safety_k_position" default="20"/>
+   <xacro:arg name="use_fake_hardware" default="false" />
+   <xacro:arg name="fake_sensor_commands" default="false" />
+
+
+  <!-- Real robot hardware -->
+  <!-- <xacro:include filename="$(find ur_description)/urdf/ur.urdf.xacro" /> -->
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
+  <xacro:ur_robot
+    prefix=""
+    joint_limits_parameters_file="$(arg joint_limit_params)" 
+    kinematics_parameters_file="$(arg kinematics_params)"
+    physical_parameters_file="$(arg physical_params)"
+    visual_parameters_file="$(arg visual_params)"
+    transmission_hw_interface="$(arg transmission_hw_interface)"/>  
+
+  <!-- Include the cell and attach it to the world-->
+  <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />
+  <link name="world" />
+  <xacro:ipa_demo_env prefix="" />
+  <joint name="demo_env_joint" type="fixed">
+    <parent link="world" />
+    <child link="env_link" />
+    <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+  </joint>
+
+  <!-- Attach UR to environment -->
+  <joint name="robot_platform_joint" type="fixed">
+    <parent link="env_link" />
+    <child link="base_link" />
+    <origin xyz="-0.350 0.766 0" rpy="-${pi/2} -${pi/2} 0" />
+  </joint>
+
+  <!-- Sensor calibration -->
+  <!-- Set the tcp according to Hand Eye Calibration-->
+  <xacro:property name="sensor_config" value="${load_yaml('$(arg calibration_config_file)')}" />
+  <xacro:property name="tcp_sensor" value="${sensor_config['tcp_sensor']}"/>
+  <link name="tcp_sensor_link" />
+  <joint name="flange_sensor_joint" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="tcp_sensor_link"/>
+    <origin xyz="${tcp_sensor['x']}
+                 ${tcp_sensor['y']}
+                 ${tcp_sensor['z']}" rpy="${tcp_sensor['roll']}
+                 ${tcp_sensor['pitch']}
+                 ${tcp_sensor['yaw']}"/>
+  </joint>
+
+  <!-- Set the welding gun tool-->
+  <xacro:property name="welding_gun_config" value="${load_yaml('$(arg calibration_config_file)')}" />
+  <xacro:property name="tcp_welding_gun" value="${welding_gun_config['tcp_welding_gun']}"/>
+  <link name="tcp_welding_gun_link" />
+  <joint name="tcp_welding_gun_joint" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="tcp_welding_gun_link"/>
+    <origin xyz="${tcp_welding_gun['x']}
+                 ${tcp_welding_gun['y']}
+                 ${tcp_welding_gun['z']}" rpy="${tcp_welding_gun['roll']}
+                 ${tcp_welding_gun['pitch']}
+                 ${tcp_welding_gun['yaw']}"/>
+  </joint>
+
+  <!-- Attach the welding gun -->
+  <xacro:include filename="$(find ipa_demo_cell_description)/urdf/$(arg endeffector).urdf.xacro" />
+  <xacro:endeffector prefix="" />
+  <xacro:property name="flange_welding_gun" value="${welding_gun_config['flange_welding_gun']}"/>
+  <joint name="welding_gun_joint" type="fixed">
+    <parent link="wrist_3_link" />
+    <child link="welding_gun_link" />
+    <origin xyz="${flange_welding_gun['x']}
+                 ${flange_welding_gun['y']}
+                 ${flange_welding_gun['z']}" rpy="${flange_welding_gun['roll']}
+                 ${flange_welding_gun['pitch']}
+                 ${flange_welding_gun['yaw']}"/>
+  </joint>
+
+
+</robot>
