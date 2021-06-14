@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="ipa_ur_demo">
 
-   <xacro:arg name="prefix" default="" />
+  <xacro:arg name="prefix" default="" />
 
   <xacro:arg name="name" default="ipa_ur_demo"/>
 
@@ -16,29 +16,33 @@
   <!-- Calibration file -->
   <xacro:arg name="calibration_config_file" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg endeffector).yaml"/>
 
-    <!-- UR Macro Parameters-->
-   <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/$(arg robot_model)/joint_limits.yaml" />
-   <xacro:arg name="kinematics_params" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg robot_model).yaml" />
-   <xacro:arg name="physical_params" default="$(find ur_description)/config/$(arg robot_model)/physical_parameters.yaml" />
-   <xacro:arg name="visual_params" default="$(find ur_description)/config/$(arg robot_model)/visual_parameters.yaml" />
-   <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
-   <xacro:arg name="safety_limits" default="false"/>
-   <xacro:arg name="safety_pos_margin" default="0.15"/>
-   <xacro:arg name="safety_k_position" default="20"/>
-   <xacro:arg name="use_fake_hardware" default="false" />
-   <xacro:arg name="fake_sensor_commands" default="false" />
-
+  <!-- UR Macro Parameters-->
+  <xacro:arg name="joint_limit_params" default="" />
+  <xacro:arg name="kinematics_params" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg robot_model).yaml" />
+  <xacro:arg name="physical_params" default="" />
+  <xacro:arg name="visual_params" default="" />
+  <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
+  <xacro:arg name="safety_limits" default="false"/>
+  <xacro:arg name="safety_pos_margin" default="0.15"/>
+  <xacro:arg name="safety_k_position" default="20"/>
+  <xacro:arg name="use_fake_hardware" default="false" />
+  <xacro:arg name="fake_sensor_commands" default="false" />
 
   <!-- Real robot hardware -->
   <!-- <xacro:include filename="$(find ur_description)/urdf/ur.urdf.xacro" /> -->
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
   <xacro:ur_robot
-    prefix=""
+    prefix="$(arg prefix)"
     joint_limits_parameters_file="$(arg joint_limit_params)" 
     kinematics_parameters_file="$(arg kinematics_params)"
     physical_parameters_file="$(arg physical_params)"
     visual_parameters_file="$(arg visual_params)"
-    transmission_hw_interface="$(arg transmission_hw_interface)"/>  
+    transmission_hw_interface="$(arg transmission_hw_interface)"
+    safety_limits="$(arg safety_limits)"
+    safety_pos_margin="$(arg safety_pos_margin)"
+    safety_k_position="$(arg safety_k_position)"
+    use_fake_hardware="$(arg use_fake_hardware)"
+    fake_sensor_commands="$(arg fake_sensor_commands)" />  
 
   <!-- Include the cell and attach it to the world-->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />

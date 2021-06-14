@@ -4,7 +4,7 @@ project(ipa_demo_cell_description)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY calibration launch meshes rviz urdf
+  DIRECTORY calibration config launch meshes rviz urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
