@@ -1,33 +1,57 @@
 # Upstream dependencies
 repositories:
+  UR10e_welding_demo:
+    type: git
+    url: https://github.com/PickNikRobotics/UR10e_welding_demo.git
+    version: master
+  Universal_Robots_Client_Library:
+    type: git
+    url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
+    version: master
+  Universal_Robots_ROS2_Driver:
+    type: git
+    url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git
+    version: main
+  control_msgs:
+    type: git
+    url: https://github.com/ros-controls/control_msgs.git
+    version: foxy-devel
+  geometric_shapes:
+    type: git
+    url: https://github.com/ros-planning/geometric_shapes
+    version: ros2
   moveit2:
     type: git
-    url: https://github.com/ros-planning/moveit2
+    url: https://github.com/ros-planning/moveit2.git
     version: feature/hybrid_planning
   moveit_msgs:
     type: git
-    url: https://github.com/sjahr/moveit_msgs
+    url: https://github.com/sjahr/moveit_msgs.git
     version: hybrid_planning
   moveit_resources:
     type: git
     url: https://github.com/ros-planning/moveit_resources
     version: ros2
-  geometric_shapes:
-    type: git
-    url: https://github.com/ros-planning/geometric_shapes
-    version: ros2
-  srdfdom:
-    type: git
-    url: https://github.com/ros-planning/srdfdom
-    version: ros2
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control
     version: master
+  ros2_control_demos:
+    type: git
+    url: https://github.com/ros-controls/ros2_control_demos.git
+    version: add_demo_nodes
   ros2_controllers:
     type: git
     url: https://github.com/ros-controls/ros2_controllers
-    version: master
+    version: 189a2f9ccd1bbac574977c6ed22e04057c56cf7d
+  srdfdom:
+    type: git
+    url: https://github.com/ros-planning/srdfdom
+    version: ros2
+  ur_msgs:
+    type: git
+    url: https://github.com/destogl/ur_msgs.git
+    version: ros2
   warehouse_ros:
     type: git
     url: https://github.com/ros-planning/warehouse_ros
