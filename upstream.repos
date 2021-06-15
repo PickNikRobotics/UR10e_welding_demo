@@ -1,0 +1,38 @@
+# Upstream dependencies
+repositories:
+  moveit2:
+    type: git
+    url: https://github.com/ros-planning/moveit2
+    version: feature/hybrid_planning
+  moveit_msgs:
+    type: git
+    url: https://github.com/sjahr/moveit_msgs
+    version: hybrid_planning
+  moveit_resources:
+    type: git
+    url: https://github.com/ros-planning/moveit_resources
+    version: ros2
+  geometric_shapes:
+    type: git
+    url: https://github.com/ros-planning/geometric_shapes
+    version: ros2
+  srdfdom:
+    type: git
+    url: https://github.com/ros-planning/srdfdom
+    version: ros2
+  ros2_control:
+    type: git
+    url: https://github.com/ros-controls/ros2_control
+    version: master
+  ros2_controllers:
+    type: git
+    url: https://github.com/ros-controls/ros2_controllers
+    version: master
+  warehouse_ros:
+    type: git
+    url: https://github.com/ros-planning/warehouse_ros
+    version: ros2
+  warehouse_ros_mongo:
+    type: git
+    url: https://github.com/ros-planning/warehouse_ros_mongo
+    version: ros2
