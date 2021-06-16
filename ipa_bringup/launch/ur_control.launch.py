@@ -21,9 +21,15 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+
 
 def load_yaml(package_name, file_path):
     package_path = get_package_share_directory(package_name)
@@ -34,6 +40,7 @@ def load_yaml(package_name, file_path):
             return yaml.safe_load(file)
     except OSError:  # parent of IOError, OSError *and* WindowsError where available
         return None
+
 
 def generate_launch_description():
     declared_arguments = []
@@ -147,7 +154,9 @@ def generate_launch_description():
         )
     )
     declared_arguments.append(
-        DeclareLaunchArgument("launch_rviz", default_value="true", description="Launch RViz?")
+        DeclareLaunchArgument(
+            "launch_rviz", default_value="true", description="Launch RViz?"
+        )
     )
 
     # Initialize Arguments
@@ -173,13 +182,28 @@ def generate_launch_description():
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
     )
     kinematics_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "default_kinematics.yaml"]
+        [
+            FindPackageShare(description_package),
+            "config",
+            ur_type,
+            "default_kinematics.yaml",
+        ]
     )
     physical_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "physical_parameters.yaml"]
+        [
+            FindPackageShare(description_package),
+            "config",
+            ur_type,
+            "physical_parameters.yaml",
+        ]
     )
     visual_params = PathJoinSubstitution(
-        [FindPackageShare(description_package), "config", ur_type, "visual_parameters.yaml"]
+        [
+            FindPackageShare(description_package),
+            "config",
+            ur_type,
+            "visual_parameters.yaml",
+        ]
     )
     script_filename = PathJoinSubstitution(
         [FindPackageShare("ur_robot_driver"), "resources", "ros_control.urscript"]
@@ -195,7 +219,9 @@ def generate_launch_description():
         [
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
-            PathJoinSubstitution([FindPackageShare(description_package), "urdf", description_file]),
+            PathJoinSubstitution(
+                [FindPackageShare(description_package), "urdf", description_file]
+            ),
             " ",
             "robot_ip:=",
             robot_ip,
@@ -273,7 +299,9 @@ def generate_launch_description():
             " ",
         ]
     )
-    robot_description_semantic = {"robot_description_semantic": robot_description_semantic_content}
+    robot_description_semantic = {
+        "robot_description_semantic": robot_description_semantic_content
+    }
 
     kinematics_yaml = load_yaml("ipa_moveit_config", "config/kinematics.yaml")
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
@@ -391,7 +419,11 @@ def generate_launch_description():
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner.py",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        arguments=[
+            "joint_state_broadcaster",
+            "--controller-manager",
+            "/controller_manager",
+        ],
     )
 
     io_and_status_controller_spawner = Node(

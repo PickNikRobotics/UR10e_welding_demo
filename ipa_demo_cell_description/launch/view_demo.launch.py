@@ -16,7 +16,12 @@
 
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import (
+    Command,
+    FindExecutable,
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -40,7 +45,12 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("ipa_demo_cell_description"), "urdf", "ipa_ur_demo.urdf.xacro"]),
+                [
+                    FindPackageShare("ipa_demo_cell_description"),
+                    "urdf",
+                    "ipa_ur_demo.urdf.xacro",
+                ]
+            ),
             " ",
             "robot_model:=",
             robot_model,
@@ -49,8 +59,7 @@ def generate_launch_description():
     robot_description = {"robot_description": robot_description_content}
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("ipa_demo_cell_description"),
-         "rviz", "view_demo.rviz"]
+        [FindPackageShare("ipa_demo_cell_description"), "rviz", "view_demo.rviz"]
     )
 
     joint_state_publisher_node = Node(

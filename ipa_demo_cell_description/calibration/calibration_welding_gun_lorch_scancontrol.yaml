@@ -8,7 +8,7 @@ flange_welding_gun:
   yaw: 3.1412569
 # Welding Gun TCP calibration
 tcp_welding_gun:
-  x: 0 
+  x: 0
   y: -0.0106
   z: 0.4194
   roll: 0.04179784
