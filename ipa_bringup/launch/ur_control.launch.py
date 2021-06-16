@@ -186,7 +186,7 @@ def generate_launch_description():
             FindPackageShare(description_package),
             "config",
             ur_type,
-            "default_kinematics.yaml",
+            "calibrated_kinematics.yaml",
         ]
     )
     physical_params = PathJoinSubstitution(
