@@ -1,0 +1,342 @@
+<?xml version="1.0" ?>
+<Taskdefinition>
+    <Tasks>
+        <WeldTask ID="0" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="40.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="40.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="50.000000" z="20.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="1" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="40.000000" z="10.000000" />
+                        <Point x="200.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="40.000000" z="10.000000" />
+                        <Point x="200.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="40.000000" z="10.000000" />
+                        <Point x="210.000000" y="40.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="40.000000" z="10.000000" />
+                        <Point x="200.000000" y="40.000000" z="20.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="2" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="40.000000" z="10.000000" />
+                        <Point x="200.000000" y="40.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="40.000000" z="10.000000" />
+                        <Point x="200.000000" y="40.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="40.000000" z="10.000000" />
+                        <Point x="50.000000" y="-110.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="40.000000" z="10.000000" />
+                        <Point x="50.000000" y="40.000000" z="160.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="3" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="50.000000" z="10.000000" />
+                        <Point x="200.000000" y="200.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="200.000000" y="50.000000" z="10.000000" />
+                        <Point x="200.000000" y="50.000000" z="160.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="4" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="198.154266" z="10.000000" />
+                        <Point x="51.736482" y="188.306189" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="198.154266" z="10.000000" />
+                        <Point x="51.736482" y="188.306189" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="198.154266" z="10.000000" />
+                        <Point x="40.151922" y="196.417784" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="198.154266" z="10.000000" />
+                        <Point x="50.000000" y="198.154266" z="20.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="5" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="169.913412" y="209.143970" z="10.000000" />
+                        <Point x="168.176930" y="218.992047" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="169.913412" y="209.143970" z="10.000000" />
+                        <Point x="168.176930" y="218.992047" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="169.913412" y="209.143970" z="10.000000" />
+                        <Point x="179.761490" y="210.880452" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="169.913412" y="209.143970" z="10.000000" />
+                        <Point x="169.913412" y="209.143970" z="20.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="6" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="51.736482" y="188.306189" z="10.000000" />
+                        <Point x="169.913412" y="209.143970" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="51.736482" y="188.306189" z="10.000000" />
+                        <Point x="169.913412" y="209.143970" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="51.736482" y="188.306189" z="10.000000" />
+                        <Point x="72.574263" y="70.129258" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="51.736482" y="188.306189" z="10.000000" />
+                        <Point x="51.736482" y="188.306189" z="130.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="7" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="168.176930" y="218.992047" z="10.000000" />
+                        <Point x="50.000000" y="198.154266" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="168.176930" y="218.992047" z="10.000000" />
+                        <Point x="50.000000" y="198.154266" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="168.176930" y="218.992047" z="10.000000" />
+                        <Point x="147.339149" y="337.168978" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="168.176930" y="218.992047" z="10.000000" />
+                        <Point x="168.176930" y="218.992047" z="130.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="8" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="188.000000" z="10.000000" />
+                        <Point x="40.000000" y="188.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="188.000000" z="10.000000" />
+                        <Point x="40.000000" y="188.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="188.000000" z="10.000000" />
+                        <Point x="50.000000" y="198.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="188.000000" z="10.000000" />
+                        <Point x="50.000000" y="188.000000" z="20.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="9" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                        <Point x="40.000000" y="40.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                        <Point x="40.000000" y="50.000000" z="20.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="10" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="188.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="188.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="188.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="50.000000" y="50.000000" z="10.000000" />
+                        <Point x="50.000000" y="50.000000" z="148.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+        <WeldTask ID="11" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="188.000000" z="10.000000" />
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="188.000000" z="10.000000" />
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="188.000000" z="10.000000" />
+                        <Point x="-98.000000" y="188.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="188.000000" z="10.000000" />
+                        <Point x="40.000000" y="188.000000" z="148.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+    </Tasks>
+    <TaskSequence S="11" />
+</Taskdefinition>
