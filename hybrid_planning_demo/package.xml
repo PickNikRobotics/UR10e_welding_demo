@@ -1,26 +1,22 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ipa_bringup</name>
+  <name>hybrid_planning_demo</name>
   <version>0.0.0</version>
-  <description>Launch file and run-time configurations, e.g. controllers.</description>
+  <description>Hybrid Planning demo for Welding application</description>
 
   <author>Adam Pettinger</author>
 
   <maintainer email="adam.pettinger@picknik.ai">Adam Pettinger</maintainer>
 
-  <license>Apache License 2.0</license>
+  <license>BSD</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>controller_manager</exec_depend>
-  <exec_depend>hybrid_planning_demo</exec_depend>
-  <exec_depend>joint_state_publisher</exec_depend>
+  <exec_depend>moveit_servo</exec_depend>
+  <exec_depend>moveit_hybrid_planning</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
-  <exec_depend>rviz2</exec_depend>
-  <exec_depend>urdf</exec_depend>
-  <exec_depend>xacro</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
