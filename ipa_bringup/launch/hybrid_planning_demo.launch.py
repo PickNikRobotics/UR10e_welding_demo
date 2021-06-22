@@ -516,11 +516,12 @@ def generate_launch_description():
 
     # Test Node
     test_request_node = Node(
-        package="moveit_hybrid_planning",
+        package="hybrid_planning_demo",
         executable="hybrid_planning_test_node",
         name="hybrid_planning_test_node",
         output="screen",
-        parameters=[robot_description, robot_description_semantic],
+        prefix=["xterm -e gdb -ex run --args"],
+        parameters=[robot_description, robot_description_semantic, kinematics_yaml],
     )
 
     nodes_to_start = [
@@ -533,7 +534,7 @@ def generate_launch_description():
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
-        move_group_node,
+        # move_group_node,
         # mongodb_server_node,
         test_request_node,
         container,
