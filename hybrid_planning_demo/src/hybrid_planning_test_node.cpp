@@ -52,7 +52,7 @@
 #include <moveit_msgs/msg/motion_plan_response.hpp>
 
 using namespace std::chrono_literals;
-const rclcpp::Logger LOGGER = rclcpp::get_logger("test_hybrid_planning_client");
+const rclcpp::Logger LOGGER = rclcpp::get_logger("ipa_hybrid_planning_demo");
 
 class HybridPlanningDemo
 {
@@ -115,48 +115,48 @@ public:
 
   void run()
   {
-    RCLCPP_INFO(LOGGER, "Initialize Planning Scene Monitor");
-    tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node_->get_clock());
-    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    // RCLCPP_INFO(LOGGER, "Initialize Planning Scene Monitor");
+    // tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node_->get_clock());
+    // tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(
-        node_, "robot_description", tf_buffer_, "planning_scene_monitor");
-    if (planning_scene_monitor_->getPlanningScene() != nullptr)
-    {
-      planning_scene_monitor_->startStateMonitor();
-      planning_scene_monitor_->providePlanningSceneService();  // let RViz display query PlanningScene
-      planning_scene_monitor_->setPlanningScenePublishingFrequency(100);
-      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
-                                                            "/planning_scene");
-      planning_scene_monitor_->startSceneMonitor();
-    }
+    // planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(
+    //     node_, "robot_description", tf_buffer_, "planning_scene_monitor");
+    // if (planning_scene_monitor_->getPlanningScene() != nullptr)
+    // {
+    //   planning_scene_monitor_->startStateMonitor();
+    //   planning_scene_monitor_->providePlanningSceneService();  // let RViz display query PlanningScene
+    //   planning_scene_monitor_->setPlanningScenePublishingFrequency(100);
+    //   planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+    //                                                         "/planning_scene");
+    //   planning_scene_monitor_->startSceneMonitor();
+    // }
 
-    if (!planning_scene_monitor_->waitForCurrentRobotState(node_->now(), 5))
-    {
-      RCLCPP_ERROR(LOGGER, "Timeout when waiting for /joint_states updates. Is the robot running?");
-      return;
-    }
+    // if (!planning_scene_monitor_->waitForCurrentRobotState(node_->now(), 5))
+    // {
+    //   RCLCPP_ERROR(LOGGER, "Timeout when waiting for /joint_states updates. Is the robot running?");
+    //   return;
+    // }
 
-    if (!hp_action_client_->wait_for_action_server(20s))
-    {
-      RCLCPP_ERROR(LOGGER, "Hybrid planning action server not available after waiting");
-      return;
-    }
+    // if (!hp_action_client_->wait_for_action_server(20s))
+    // {
+    //   RCLCPP_ERROR(LOGGER, "Hybrid planning action server not available after waiting");
+    //   return;
+    // }
 
-    geometry_msgs::msg::Pose box_pose;
-    box_pose.position.x = 0.4;
-    box_pose.position.y = 0.0;
-    box_pose.position.z = 0.85;
+    // geometry_msgs::msg::Pose box_pose;
+    // box_pose.position.x = 0.4;
+    // box_pose.position.y = 0.0;
+    // box_pose.position.z = 0.85;
 
-    collision_object_1_.primitives.push_back(box_1_);
-    collision_object_1_.primitive_poses.push_back(box_pose);
-    collision_object_1_.operation = collision_object_1_.ADD;
+    // collision_object_1_.primitives.push_back(box_1_);
+    // collision_object_1_.primitive_poses.push_back(box_pose);
+    // collision_object_1_.operation = collision_object_1_.ADD;
 
-    // Add object to planning scene
-    {  // Lock PlanningScene
-      planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);
-      scene->processCollisionObjectMsg(collision_object_1_);
-    }  // Unlock PlanningScene
+    // // Add object to planning scene
+    // {  // Lock PlanningScene
+    //   planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);
+    //   scene->processCollisionObjectMsg(collision_object_1_);
+    // }  // Unlock PlanningScene
 
     RCLCPP_INFO(LOGGER, "Wait 2s see collision object");
     rclcpp::sleep_for(2s);
@@ -184,7 +184,7 @@ public:
     goal_msg.request.planner_id = "ompl";
 
     moveit::core::RobotState goal_state(robot_model);
-    std::vector<double> joint_values = { 0.0, 0.0, 0.0, 0.0, 0.0, 1.571, 0.785 };
+    std::vector<double> joint_values = { 0.0, 0.0, 0.0, 0.0, 1.571, 0.785 };
     goal_state.setJointGroupPositions(joint_model_group, joint_values);
 
     goal_msg.request.goal_constraints.resize(1);
