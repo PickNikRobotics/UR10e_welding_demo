@@ -520,7 +520,7 @@ def generate_launch_description():
         executable="hybrid_planning_test_node",
         name="hybrid_planning_test_node",
         output="screen",
-        prefix=["xterm -e gdb -ex run --args"],
+        # prefix=["xterm -e gdb -ex run --args"],
         parameters=[robot_description, robot_description_semantic, kinematics_yaml],
     )
 
@@ -534,8 +534,8 @@ def generate_launch_description():
         speed_scaling_state_broadcaster_spawner,
         force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
-        # move_group_node,
-        # mongodb_server_node,
+        move_group_node,
+        mongodb_server_node,
         test_request_node,
         container,
     ]
