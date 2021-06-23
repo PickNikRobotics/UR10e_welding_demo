@@ -115,33 +115,33 @@ public:
 
   void run()
   {
-    // RCLCPP_INFO(LOGGER, "Initialize Planning Scene Monitor");
-    // tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node_->get_clock());
-    // tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
+    RCLCPP_INFO(LOGGER, "Initialize Planning Scene Monitor");
+    tf_buffer_ = std::make_shared<tf2_ros::Buffer>(node_->get_clock());
+    tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
 
-    // planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(
-    //     node_, "robot_description", tf_buffer_, "planning_scene_monitor");
-    // if (planning_scene_monitor_->getPlanningScene() != nullptr)
-    // {
-    //   planning_scene_monitor_->startStateMonitor();
-    //   planning_scene_monitor_->providePlanningSceneService();  // let RViz display query PlanningScene
-    //   planning_scene_monitor_->setPlanningScenePublishingFrequency(100);
-    //   planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
-    //                                                         "/planning_scene");
-    //   planning_scene_monitor_->startSceneMonitor();
-    // }
+    planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>(
+        node_, "robot_description", tf_buffer_, "planning_scene_monitor");
+    if (planning_scene_monitor_->getPlanningScene() != nullptr)
+    {
+      planning_scene_monitor_->startStateMonitor();
+      planning_scene_monitor_->providePlanningSceneService();  // let RViz display query PlanningScene
+      planning_scene_monitor_->setPlanningScenePublishingFrequency(100);
+      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+                                                            "/planning_scene");
+      planning_scene_monitor_->startSceneMonitor();
+    }
 
-    // if (!planning_scene_monitor_->waitForCurrentRobotState(node_->now(), 5))
-    // {
-    //   RCLCPP_ERROR(LOGGER, "Timeout when waiting for /joint_states updates. Is the robot running?");
-    //   return;
-    // }
+    if (!planning_scene_monitor_->waitForCurrentRobotState(node_->now(), 5))
+    {
+      RCLCPP_ERROR(LOGGER, "Timeout when waiting for /joint_states updates. Is the robot running?");
+      return;
+    }
 
-    // if (!hp_action_client_->wait_for_action_server(20s))
-    // {
-    //   RCLCPP_ERROR(LOGGER, "Hybrid planning action server not available after waiting");
-    //   return;
-    // }
+    if (!hp_action_client_->wait_for_action_server(20s))
+    {
+      RCLCPP_ERROR(LOGGER, "Hybrid planning action server not available after waiting");
+      return;
+    }
 
     // geometry_msgs::msg::Pose box_pose;
     // box_pose.position.x = 0.4;
