@@ -17,10 +17,10 @@
   <xacro:arg name="calibration_config_file" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg endeffector).yaml"/>
 
   <!-- UR Macro Parameters-->
-  <xacro:arg name="joint_limit_params" default="" />
-  <xacro:arg name="kinematics_params" default="$(find ipa_demo_cell_description)/calibration/calibration_$(arg robot_model).yaml" />
-  <xacro:arg name="physical_params" default="" />
-  <xacro:arg name="visual_params" default="" />
+  <xacro:arg name="joint_limit_params" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/joint_limits.yaml" />
+  <xacro:arg name="kinematics_params" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/calibrated_kinematics.yaml" />
+  <xacro:arg name="physical_params" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/physical_parameters.yaml" />
+  <xacro:arg name="visual_params" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/visual_parameters.yaml" />
   <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
   <xacro:arg name="safety_limits" default="false"/>
   <xacro:arg name="safety_pos_margin" default="0.15"/>
