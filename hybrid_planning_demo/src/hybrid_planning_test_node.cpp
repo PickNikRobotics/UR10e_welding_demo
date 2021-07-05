@@ -181,10 +181,10 @@ public:
     goal_msg.request.max_velocity_scaling_factor = 0.1;
     goal_msg.request.max_acceleration_scaling_factor = 0.1;
     goal_msg.request.allowed_planning_time = 2.0;
-    goal_msg.request.planner_id = "ompl";
+    goal_msg.request.planner_id = "RRTConnectkConfigDefault";
 
     moveit::core::RobotState goal_state(robot_model);
-    std::vector<double> joint_values = { 0.0, 0.0, 0.0, 0.0, 1.571, 0.785 };
+    std::vector<double> joint_values = { -0.19, -0.29, -1.29, -1.57, -4.53, -4.71 };
     goal_state.setJointGroupPositions(joint_model_group, joint_values);
 
     goal_msg.request.goal_constraints.resize(1);

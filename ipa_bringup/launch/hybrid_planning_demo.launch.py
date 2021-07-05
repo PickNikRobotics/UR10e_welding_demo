@@ -308,15 +308,12 @@ def generate_launch_description():
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
     # Planning Configuration
-    ompl_planning_pipeline_config = {
-        "move_group": {
-            "planning_plugin": "ompl_interface/OMPLPlanner",
-            "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-            "start_state_max_bounds_error": 0.1,
-        }
-    }
-    ompl_planning_yaml = load_yaml("ipa_moveit_config", "config/ompl_planning.yaml")
-    ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
+    ompl_pipeline = load_yaml("ipa_moveit_config", "config/ompl_planning.yaml")
+    ompl_pipeline["planning_plugin"] = "ompl_interface/OMPLPlanner"
+    ompl_pipeline[
+        "request_adapters"
+    ] = """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"""
+    ompl_pipeline["start_state_max_bounds_error"] = 0.1
 
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ipa_moveit_config", "config/controllers.yaml")
@@ -357,7 +354,7 @@ def generate_launch_description():
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,
-            ompl_planning_pipeline_config,
+            {"move_group": ompl_pipeline},
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
@@ -412,7 +409,7 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
-            ompl_planning_pipeline_config,
+            {"move_group": ompl_pipeline},
             robot_description_kinematics,
         ],
     )
@@ -465,13 +462,11 @@ def generate_launch_description():
 
     # Load params
     global_planner_param = load_yaml(
-        "moveit_hybrid_planning", "config/global_planner.yaml"
+        "hybrid_planning_demo", "config/global_planner.yaml"
     )
-    local_planner_param = load_yaml(
-        "moveit_hybrid_planning", "config/local_planner.yaml"
-    )
+    local_planner_param = load_yaml("hybrid_planning_demo", "config/local_planner.yaml")
     hybrid_planning_manager_param = load_yaml(
-        "moveit_hybrid_planning", "config/hybrid_planning_manager.yaml"
+        "hybrid_planning_demo", "config/hybrid_planning_manager.yaml"
     )
 
     # Hybrid planner container
@@ -490,7 +485,7 @@ def generate_launch_description():
                     robot_description,
                     robot_description_semantic,
                     kinematics_yaml,
-                    ompl_planning_pipeline_config,
+                    {"ompl": ompl_pipeline},
                 ],
             ),
             ComposableNode(
