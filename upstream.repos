@@ -22,7 +22,9 @@ repositories:
     version: ros2
   moveit2:
     type: git
-    url: https://github.com/ros-planning/moveit2.git
+    # TODO(henning): switch back to upstream
+    # url: https://github.com/ros-planning/moveit2.git
+    url: https://github.com/henningkayser/moveit2.git
     version: feature/hybrid_planning
   moveit_msgs:
     type: git
