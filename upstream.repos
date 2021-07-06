@@ -28,8 +28,10 @@ repositories:
     version: feature/hybrid_planning
   moveit_msgs:
     type: git
-    url: https://github.com/sjahr/moveit_msgs.git
-    version: hybrid_planning
+    # TODO(henning): switch back to upstream
+    # url: https://github.com/ros-planning/moveit_msgs.git
+    url: https://github.com/henningkayser/moveit_msgs.git
+    version: hybrid_planning-synced
   moveit_resources:
     type: git
     url: https://github.com/ros-planning/moveit_resources
