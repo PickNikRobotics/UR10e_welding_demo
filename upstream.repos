@@ -32,6 +32,13 @@ repositories:
     type: git
     url: https://github.com/ros-planning/moveit_resources
     version: ros2
+  moveit_task_constructor:
+    type: git
+    # TODO(henningkayser): switch back upstream
+    # url: https://github.com/ros-planning/moveit_task_constructor.git
+    # version: ros2
+    url: https://github.com/henningkayser/moveit_task_constructor.git
+    version: pr/fix-ros2-macros
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control

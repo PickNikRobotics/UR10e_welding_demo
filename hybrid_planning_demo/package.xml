@@ -13,6 +13,11 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>moveit_task_constructor_core</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>rclcpp_components</depend>
+
   <exec_depend>moveit_servo</exec_depend>
   <exec_depend>moveit_hybrid_planning</exec_depend>
   <exec_depend>launch</exec_depend>

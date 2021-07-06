@@ -477,8 +477,10 @@ def generate_launch_description():
         executable="component_container",
         composable_node_descriptions=[
             ComposableNode(
-                package="moveit_hybrid_planning",
-                plugin="moveit_hybrid_planning::GlobalPlannerComponent",
+                # package="moveit_hybrid_planning",
+                # plugin="moveit_hybrid_planning::GlobalPlannerComponent",
+                package="hybrid_planning_demo",
+                plugin="hybrid_planning_demo::GlobalMTCPlannerComponent",
                 name="global_planner",
                 parameters=[
                     global_planner_param,
