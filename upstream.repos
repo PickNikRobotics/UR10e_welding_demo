@@ -39,8 +39,8 @@ repositories:
     # TODO(henningkayser): switch back upstream
     # url: https://github.com/ros-planning/moveit_task_constructor.git
     # version: ros2
-    url: https://github.com/henningkayser/moveit_task_constructor.git
-    version: pr/fix-ros2-macros
+    url: https://github.com/JafarAbdi/moveit_task_constructor.git
+    version: ros2
   rosparam_shortcuts:
     type: git
     url: https://github.com/PickNikRobotics/rosparam_shortcuts.git
