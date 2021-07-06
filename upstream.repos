@@ -39,6 +39,10 @@ repositories:
     # version: ros2
     url: https://github.com/henningkayser/moveit_task_constructor.git
     version: pr/fix-ros2-macros
+  rosparam_shortcuts:
+    type: git
+    url: https://github.com/PickNikRobotics/rosparam_shortcuts.git
+    version: ros2
   ros2_control:
     type: git
     url: https://github.com/ros-controls/ros2_control
