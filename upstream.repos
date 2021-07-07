@@ -22,15 +22,30 @@ repositories:
     version: ros2
   moveit2:
     type: git
-    url: https://github.com/ros-planning/moveit2.git
+    # TODO(henning): switch back to upstream
+    # url: https://github.com/ros-planning/moveit2.git
+    url: https://github.com/henningkayser/moveit2.git
     version: feature/hybrid_planning
   moveit_msgs:
     type: git
-    url: https://github.com/sjahr/moveit_msgs.git
-    version: hybrid_planning
+    # TODO(henning): switch back to upstream
+    # url: https://github.com/ros-planning/moveit_msgs.git
+    url: https://github.com/henningkayser/moveit_msgs.git
+    version: hybrid_planning-synced
   moveit_resources:
     type: git
     url: https://github.com/ros-planning/moveit_resources
+    version: ros2
+  moveit_task_constructor:
+    type: git
+    # TODO(henningkayser): switch back upstream
+    # url: https://github.com/ros-planning/moveit_task_constructor.git
+    # version: ros2
+    url: https://github.com/JafarAbdi/moveit_task_constructor.git
+    version: ros2
+  rosparam_shortcuts:
+    type: git
+    url: https://github.com/PickNikRobotics/rosparam_shortcuts.git
     version: ros2
   ros2_control:
     type: git
