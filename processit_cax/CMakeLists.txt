@@ -20,11 +20,20 @@ include_directories(include ${EIGEN3_INCLUDE_DIR})
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(visualization_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
-find_package(tf2_geometry_msgs REQUIRED)
+find_package(processit_msgs REQUIRED)
 find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
+
+set(THIS_PACKAGE_INCLUDE_DEPENDS
+  rclcpp
+  rclcpp_components
+  visualization_msgs
+  processit_msgs
+  Eigen3
+)
+
+include_directories(include)
 
 # Add TaskDescription Library (non-ROS!)
 add_library (TaskDescription SHARED
@@ -44,14 +53,30 @@ add_library (TaskDescription SHARED
 )
 target_link_libraries(TaskDescription ${TinyXML_LIBS} Eigen3::Eigen)
 
+# Add ROS wrapper for task description
+add_executable(plugin_task_description
+  # include/plugin_task_description.h
+  src/plugin_task_description.cpp
+)
+ament_target_dependencies(plugin_task_description ${THIS_PACKAGE_INCLUDE_DEPENDS})
+target_link_libraries(plugin_task_description Eigen3::Eigen TaskDescription)
 
 ament_export_include_directories(include)
 ament_export_libraries(TaskDescription)
-# ament_export_dependencies()
+ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  ament_lint_auto_find_test_dependencies()
-endif()
+add_executable(plugin_task_description_test_node src/plugin_task_description_test_node.cpp)
+ament_target_dependencies(plugin_task_description_test_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+
+install(
+  TARGETS
+    TaskDescription
+    plugin_task_description
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
 
 ament_package()
