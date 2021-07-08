@@ -159,6 +159,20 @@ def generate_launch_description():
             "launch_rviz", default_value="true", description="Launch RViz?"
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "workpiece_folder_name",
+            default_value="Workpiece_Demo_nominal",
+            description="Folder of workpiece to load",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "workpiece_scene_file_name",
+            default_value="Workpiece_Demo_nominal.scene",
+            description="Name of scene to load",
+        )
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -178,6 +192,9 @@ def generate_launch_description():
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
+    # Demo Arguments
+    folder_name = LaunchConfiguration("workpiece_folder_name")
+    scene_file_name = LaunchConfiguration("workpiece_scene_file_name")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -344,6 +361,16 @@ def generate_launch_description():
             "wait_for_initial_state_timeout": 10.0,
         },
     }
+
+    # Compose the path to the workpiece
+    scene_file_param = PathJoinSubstitution(
+        [
+            FindPackageShare("ipa_demo_support"),
+            "workpieces",
+            folder_name,
+            scene_file_name,
+        ]
+    )
 
     # Start the actual move_group node/action server
     move_group_node = Node(
@@ -521,6 +548,37 @@ def generate_launch_description():
         parameters=[robot_description, robot_description_semantic, kinematics_yaml],
     )
 
+    ##############################
+    # Welding related stuff
+    ##############################
+
+    moveit_publish_scene_from_text = Node(
+        package="moveit_ros_planning",
+        executable="moveit_publish_scene_from_text",
+        output="screen",
+        arguments=["--scene", scene_file_param],
+        parameters=[
+            robot_description,
+            robot_description_semantic,
+            robot_description_kinematics,
+        ],
+    )
+
+    plugin_task_description = Node(
+        package="processit_cax",
+        executable="plugin_task_description",
+        output="screen",
+        parameters=[],
+    )
+
+    # Test Node
+    test_plugin_task_description = Node(
+        package="processit_cax",
+        executable="plugin_task_description_test_node",
+        output="screen",
+        parameters=[],
+    )
+
     nodes_to_start = [
         control_node,
         dashboard_client_node,
@@ -535,6 +593,9 @@ def generate_launch_description():
         mongodb_server_node,
         test_request_node,
         container,
+        moveit_publish_scene_from_text,
+        plugin_task_description,
+        test_plugin_task_description,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)

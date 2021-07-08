@@ -33,7 +33,7 @@ void PluginTaskDescription::initializeServices()
 {
   using std::placeholders::_1;
   using std::placeholders::_2;
-
+  RCLCPP_INFO(LOGGER, "Create service to load task description ");
   load_task_description_service = nh_->create_service<processit_msgs::srv::LoadTaskDescription>(
       "~/load_task_description", std::bind(&PluginTaskDescription::loadTaskDescription, this, _1, _2));
 }
@@ -117,6 +117,8 @@ void PluginTaskDescription::loadTaskDescription(
 
       task_length += segment_length;
     }
+
+    response->success = true;
   }
 }
 
@@ -133,5 +135,6 @@ int main(int argc, char** argv)
 
   processit_cax::PluginTaskDescription plugin_task_description_node(node);
   rclcpp::spin(node);
+  rclcpp::shutdown();
   return 0;
 }

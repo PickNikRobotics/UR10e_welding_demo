@@ -23,6 +23,9 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(processit_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
+find_package(rviz_visual_tools REQUIRED)
 find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -30,6 +33,9 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp_components
   visualization_msgs
   processit_msgs
+  geometry_msgs
+  moveit_ros_planning
+  rviz_visual_tools
   Eigen3
 )
 
@@ -61,18 +67,23 @@ add_executable(plugin_task_description
 ament_target_dependencies(plugin_task_description ${THIS_PACKAGE_INCLUDE_DEPENDS})
 target_link_libraries(plugin_task_description Eigen3::Eigen TaskDescription)
 
+# Add Test node for task description plugin
+add_executable(plugin_task_description_test_node src/plugin_task_description_test_node.cpp)
+ament_target_dependencies(plugin_task_description_test_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
+
 ament_export_include_directories(include)
 ament_export_libraries(TaskDescription)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 
-add_executable(plugin_task_description_test_node src/plugin_task_description_test_node.cpp)
-ament_target_dependencies(plugin_task_description_test_node ${THIS_PACKAGE_INCLUDE_DEPENDS})
-
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
+)
 
 install(
   TARGETS
     TaskDescription
     plugin_task_description
+    plugin_task_description_test_node
   EXPORT export_${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
