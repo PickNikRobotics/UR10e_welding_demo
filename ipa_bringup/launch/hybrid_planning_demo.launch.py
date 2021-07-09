@@ -556,11 +556,13 @@ def generate_launch_description():
         package="moveit_ros_planning",
         executable="moveit_publish_scene_from_text",
         output="screen",
+        # TODO Look for a better solution to wait on planning scene?
+        prefix="bash -c 'sleep 10; $0 $@'",
         arguments=["--scene", scene_file_param],
         parameters=[
             robot_description,
             robot_description_semantic,
-            robot_description_kinematics,
+            robot_description_kinematics,  # kinematics_yaml
         ],
     )
 
@@ -576,7 +578,11 @@ def generate_launch_description():
         package="processit_cax",
         executable="plugin_task_description_test_node",
         output="screen",
-        parameters=[],
+        parameters=[
+            robot_description,
+            robot_description_semantic,
+            robot_description_kinematics,  # kinematics_yaml
+        ],
     )
 
     nodes_to_start = [
@@ -591,9 +597,9 @@ def generate_launch_description():
         robot_controller_spawner,
         move_group_node,
         mongodb_server_node,
-        test_request_node,
+        # test_request_node,
         container,
-        moveit_publish_scene_from_text,
+        # moveit_publish_scene_from_text,
         plugin_task_description,
         test_plugin_task_description,
     ]

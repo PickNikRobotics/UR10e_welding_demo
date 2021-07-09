@@ -51,6 +51,26 @@ void PluginTaskDescription::initializeSubscribers()
 //----------------------------------------------------------------------
 
 /**
+ * @brief Convert an Eigen position vector and a corresponding rotation to a geometry_msgs::msg::Pose
+ *
+ * @param positionVector Eigen::Vector3d
+ * @param q Eigen::Quaternion<double>
+ * @return std::string
+ */
+geometry_msgs::msg::Pose PluginTaskDescription::getPose(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
+{
+  geometry_msgs::msg::Pose pose;
+  pose.position.x = positionVector[0];
+  pose.position.y = positionVector[1];
+  pose.position.z = positionVector[2];
+  pose.orientation.x = q.x();
+  pose.orientation.y = q.y();
+  pose.orientation.z = q.z();
+  pose.orientation.w = q.w();
+  return pose;
+}
+
+/**
  * @brief Service to load a given xml task definition and add it to the GUI
  * *
  * @param req LoadTaskDescription Request which contains path to xml
@@ -70,12 +90,15 @@ void PluginTaskDescription::loadTaskDescription(
   // Translation (given in mm in the task description)
   // Scaling the position that should be in [m]
   double unit_scaling = 0.001;
+  RCLCPP_INFO_STREAM(LOGGER, "Found " << tasklist.GetNumberOfWeldTasks() << " seams.");
 
   for (int i = 0; i < tasklist.GetNumberOfWeldTasks(); i++)
   {
     int NumberOfWeldSegments = tasklist.GetNumberOfWeldSegments(i);
     double task_length = 0;
     double segment_length = 0;
+
+    RCLCPP_INFO_STREAM(LOGGER, "Seam " << i << " has " << NumberOfWeldSegments << " segments.");
 
     for (int j = 0; j < NumberOfWeldSegments; j++)
     {
@@ -87,8 +110,6 @@ void PluginTaskDescription::loadTaskDescription(
 
         // Get Manufacturing Coordinate system for start and end point and rotation
         Eigen::Matrix4d manufacturingFrameStart = tasklist.GetManufacturingCoordinateSystem(i, task_length);
-        Eigen::Matrix4d manufacturingFrameCenter =
-            tasklist.GetManufacturingCoordinateSystem(i, task_length + segment_length / 2);
         Eigen::Matrix4d manufacturingFrameEnd =
             tasklist.GetManufacturingCoordinateSystem(i, task_length + segment_length);
 
@@ -99,20 +120,27 @@ void PluginTaskDescription::loadTaskDescription(
         // Translation (given in mm in the task description)
         // Scaling the position that should be in [m]
         Eigen::Vector3d positionVectorStart = unit_scaling * manufacturingFrameStart.col(3).head(3);
-        Eigen::Vector3d positionVectorCenter = unit_scaling * manufacturingFrameCenter.col(3).head(3);
         Eigen::Vector3d positionVectorEnd = unit_scaling * manufacturingFrameEnd.col(3).head(3);
 
+        // TODO Migrate visualization
         // Set start and end pose and get pose marker id;
         // int_marker_id_start = setPositionVector(positionVectorStart, q);
         // int_marker_id_end = setPositionVector(positionVectorEnd, q);
 
-        // Publish the manufacturing frames as TF transforms to describe the weld seam
-
         // Add a line (cube) connecting both points in direction of y axis (along the seam)
-        double a = M_PI * 0.5;
-        Eigen::Quaternion<double> factor(cos(a / 2), sin(a / 2), 0, 0);
-        q = q * factor;
+        // double a = M_PI * 0.5;
+        // Eigen::Quaternion<double> factor(cos(a / 2), sin(a / 2), 0, 0);
+        // q = q * factor;
         // int_marker_id_line = addLine(seam_count, unit_scaling * segment_length, positionVectorCenter, q);
+
+        geometry_msgs::msg::Pose start = getPose(positionVectorStart, q);
+        geometry_msgs::msg::Pose end = getPose(positionVectorEnd, q);
+        processit_msgs::msg::WeldSeam weld_seam;
+        weld_seam.poses.push_back(start);
+        weld_seam.poses.push_back(end);
+        response->weld_seams.push_back(weld_seam);
+
+        RCLCPP_INFO_STREAM(LOGGER, "Found seam segment " << i << " of length " << segment_length);
       }
 
       task_length += segment_length;

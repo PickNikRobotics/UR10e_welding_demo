@@ -10,6 +10,8 @@
 #include <visualization_msgs/msg/interactive_marker_feedback.hpp>
 #include <visualization_msgs/msg/interactive_marker_update.hpp>
 #include <processit_msgs/srv/load_task_description.hpp>
+#include <processit_msgs/msg/weld_seam.hpp>
+#include <geometry_msgs/msg/pose.hpp>
 
 // C++
 #include <Eigen/Eigen>
@@ -22,6 +24,7 @@ class PluginTaskDescription
 public:
   PluginTaskDescription(rclcpp::Node::SharedPtr& nh);
 
+  geometry_msgs::msg::Pose getPose(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q);
   void loadTaskDescription(const std::shared_ptr<processit_msgs::srv::LoadTaskDescription::Request> request,
                            std::shared_ptr<processit_msgs::srv::LoadTaskDescription::Response> response);
 

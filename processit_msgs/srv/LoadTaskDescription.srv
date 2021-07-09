@@ -1,3 +1,4 @@
 string task_description_file
 ---
+processit_msgs/WeldSeam[] weld_seams
 bool success
