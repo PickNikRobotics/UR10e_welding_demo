@@ -23,11 +23,15 @@ public:
     node_ = node;
   }
 
-  void run()
+  void run(std::string task_description_file)
   {
     namespace rvt = rviz_visual_tools;
     rviz_visual_tools::RvizVisualTools visual_tools("world", "plugin_task_description", node_);
     visual_tools.deleteAllMarkers();
+
+    // TODO Add hardcoded test case
+    // - call service and load exemplary task description
+    // - load workpiece to planning scene and publish workpiece tf
 
     /*
     geometry_msgs::msg::Pose workpiece_pose;
@@ -38,17 +42,11 @@ public:
     visual_tools.trigger();
     */
 
-    robot_model_loader::RobotModelLoader robot_model_loader(node_, "robot_description");
-    const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
-    planning_scene::PlanningScene ps(robot_model_loader.getModel());
+    // robot_model_loader::RobotModelLoader robot_model_loader(node_, "robot_description");
+    // const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
+    // planning_scene::PlanningScene ps(robot_model_loader.getModel());
 
-    // TODO Add hardcoded test case
-    // - call service and load exemplary task description
-    // - load workpiece to planning scene and publish workpiece tf
-
-    std::string task_description_file = "/home/chl/ws_moveit2/src/UR10e_welding_demo/ipa_demo_support/workpieces/"
-                                        "Workpiece_Demo_deviated/Workpiece_Demo_TaskDescription_deviated.xml";
-
+    // Service call to load a task description
     rclcpp::Client<processit_msgs::srv::LoadTaskDescription>::SharedPtr client =
         node_->create_client<processit_msgs::srv::LoadTaskDescription>("plugin_task_description/load_task_description");
 
@@ -76,10 +74,14 @@ int main(int argc, char** argv)
   rclcpp::init(argc, argv);
   rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("plugin_task_description_test_node");
 
+  // First parameter is expected to determine the task description to be loaded
+  std::string task_description_filename = argv[3];
+
   PluginTaskDescriptionTestNode plugin_task_description_test_node(node);
-  std::thread run_plugin_task_description_test([&plugin_task_description_test_node]() {
+  std::thread run_plugin_task_description_test([&plugin_task_description_test_node, task_description_filename]() {
     rclcpp::sleep_for(5s);
-    plugin_task_description_test_node.run();
+    // Get parameter containing task description file name and run test node
+    plugin_task_description_test_node.run(task_description_filename);
   });
 
   rclcpp::spin(node);

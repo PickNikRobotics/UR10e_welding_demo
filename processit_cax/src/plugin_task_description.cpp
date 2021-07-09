@@ -82,6 +82,8 @@ void PluginTaskDescription::loadTaskDescription(
     const std::shared_ptr<processit_msgs::srv::LoadTaskDescription::Request> request,
     std::shared_ptr<processit_msgs::srv::LoadTaskDescription::Response> response)
 {
+  RCLCPP_INFO_STREAM(LOGGER, "Loading file " << request->task_description_file << ".");
+
   TaskList tasklist;
   int seam_count = 0;
   std::string int_marker_id_start, int_marker_id_end, int_marker_id_center, int_marker_id_line;

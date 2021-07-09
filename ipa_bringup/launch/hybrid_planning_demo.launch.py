@@ -173,6 +173,13 @@ def generate_launch_description():
             description="Name of scene to load",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "workpiece_task_file_name",
+            default_value="Workpiece_Demo_TaskDescription_nominal.xml",
+            description="Name of scene to load",
+        )
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -195,6 +202,7 @@ def generate_launch_description():
     # Demo Arguments
     folder_name = LaunchConfiguration("workpiece_folder_name")
     scene_file_name = LaunchConfiguration("workpiece_scene_file_name")
+    task_file_name = LaunchConfiguration("workpiece_task_file_name")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -369,6 +377,15 @@ def generate_launch_description():
             "workpieces",
             folder_name,
             scene_file_name,
+        ]
+    )
+
+    task_file_param = PathJoinSubstitution(
+        [
+            FindPackageShare("ipa_demo_support"),
+            "workpieces",
+            folder_name,
+            task_file_name,
         ]
     )
 
@@ -570,6 +587,7 @@ def generate_launch_description():
         package="processit_cax",
         executable="plugin_task_description",
         output="screen",
+        arguments=[],
         parameters=[],
     )
 
@@ -579,6 +597,7 @@ def generate_launch_description():
         executable="plugin_task_description_test_node",
         output="screen",
         parameters=[
+            task_file_param,
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,  # kinematics_yaml
