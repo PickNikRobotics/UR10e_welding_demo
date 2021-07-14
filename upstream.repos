@@ -75,3 +75,16 @@ repositories:
     type: git
     url: https://github.com/ros-planning/warehouse_ros_mongo
     version: ros2
+  # TODO(christianlandgraf): switch back to main repos as soon as the pr is merged
+  rviz_visual_tools:
+    type: git
+    url: https://github.com/PickNikRobotics/rviz_visual_tools
+    version: foxy-devel
+  graph_msgs:
+    type: git
+    url: https://github.com/vatanaksoytezer/graph_msgs
+    version: ros2
+  moveit_visual_tools:
+    type: git
+    url: https://github.com/vatanaksoytezer/moveit_visual_tools.git
+    version: pr-port_ros2

@@ -161,23 +161,9 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "workpiece_folder_name",
+            "workpiece_name",
             default_value="Workpiece_Demo_nominal",
             description="Folder of workpiece to load",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "workpiece_scene_file_name",
-            default_value="Workpiece_Demo_nominal.scene",
-            description="Name of scene to load",
-        )
-    )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "workpiece_task_file_name",
-            default_value="Workpiece_Demo_TaskDescription_nominal.xml",
-            description="Name of scene to load",
         )
     )
 
@@ -200,9 +186,7 @@ def generate_launch_description():
     robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     # Demo Arguments
-    folder_name = LaunchConfiguration("workpiece_folder_name")
-    scene_file_name = LaunchConfiguration("workpiece_scene_file_name")
-    task_file_name = LaunchConfiguration("workpiece_task_file_name")
+    workpiece_name = LaunchConfiguration("workpiece_name")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -371,21 +355,12 @@ def generate_launch_description():
     }
 
     # Compose the path to the workpiece
-    scene_file_param = PathJoinSubstitution(
+    workpiece_path_param = PathJoinSubstitution(
         [
             FindPackageShare("ipa_demo_support"),
             "workpieces",
-            folder_name,
-            scene_file_name,
-        ]
-    )
-
-    task_file_param = PathJoinSubstitution(
-        [
-            FindPackageShare("ipa_demo_support"),
-            "workpieces",
-            folder_name,
-            task_file_name,
+            workpiece_name,
+            workpiece_name,
         ]
     )
 
@@ -569,19 +544,19 @@ def generate_launch_description():
     # Welding related stuff
     ##############################
 
-    moveit_publish_scene_from_text = Node(
-        package="moveit_ros_planning",
-        executable="moveit_publish_scene_from_text",
-        output="screen",
-        # TODO Look for a better solution to wait on planning scene?
-        prefix="bash -c 'sleep 10; $0 $@'",
-        arguments=["--scene", scene_file_param],
-        parameters=[
-            robot_description,
-            robot_description_semantic,
-            robot_description_kinematics,  # kinematics_yaml
-        ],
-    )
+    # moveit_publish_scene_from_text = Node(
+    #     package="moveit_ros_planning",
+    #     executable="moveit_publish_scene_from_text",
+    #     output="screen",
+    #     # TODO Look for a better solution to wait on planning scene?
+    #     prefix="bash -c 'sleep 10; $0 $@'",
+    #     arguments=["--scene", scene_file_param],
+    #     parameters=[
+    #         robot_description,
+    #         robot_description_semantic,
+    #         robot_description_kinematics,  # kinematics_yaml
+    #     ],
+    # )
 
     plugin_task_description = Node(
         package="processit_cax",
@@ -595,9 +570,10 @@ def generate_launch_description():
     test_plugin_task_description = Node(
         package="processit_cax",
         executable="plugin_task_description_test_node",
+        name="plugin_task_description_test_node",
         output="screen",
         parameters=[
-            task_file_param,
+            {"workpiece_path": workpiece_path_param},
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,  # kinematics_yaml
@@ -616,7 +592,7 @@ def generate_launch_description():
         robot_controller_spawner,
         move_group_node,
         mongodb_server_node,
-        # test_request_node,
+        test_request_node,
         container,
         # moveit_publish_scene_from_text,
         plugin_task_description,

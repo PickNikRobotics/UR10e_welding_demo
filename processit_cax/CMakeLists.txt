@@ -25,7 +25,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(processit_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
-find_package(rviz_visual_tools REQUIRED)
+find_package(moveit_visual_tools REQUIRED)
 find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
@@ -35,7 +35,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   processit_msgs
   geometry_msgs
   moveit_ros_planning
-  rviz_visual_tools
+  moveit_visual_tools
   Eigen3
 )
 

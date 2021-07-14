@@ -12,6 +12,7 @@
   <depend>rclcpp</depend>
   <depend>visualization_msgs</depend>
   <depend>processit_msgs</depend>
+  <depend>moveit_visual_tools</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
