@@ -89,20 +89,21 @@ void PluginTaskDescription::loadTaskDescription(
   std::string int_marker_id_start, int_marker_id_end, int_marker_id_center, int_marker_id_line;
   tasklist.ReadXML(request->task_description_file);
   std::string manufacturingSubFrameID;
-  // Translation (given in mm in the task description)
-  // Scaling the position that should be in [m]
+
+  // Scaling the translation (given in [mm], should be in [m]
   double unit_scaling = 0.001;
+
   RCLCPP_INFO_STREAM(LOGGER, "Found " << tasklist.GetNumberOfWeldTasks() << " seams.");
 
   for (int i = 0; i < tasklist.GetNumberOfWeldTasks(); i++)
   {
-    int NumberOfWeldSegments = tasklist.GetNumberOfWeldSegments(i);
+    int no_weld_segments = tasklist.GetNumberOfWeldSegments(i);
     double task_length = 0;
     double segment_length = 0;
 
-    RCLCPP_INFO_STREAM(LOGGER, "Seam " << i << " has " << NumberOfWeldSegments << " segments.");
+    // RCLCPP_INFO_STREAM(LOGGER, "Seam " << i << " has " << no_weld_segments << " segments.");
 
-    for (int j = 0; j < NumberOfWeldSegments; j++)
+    for (int j = 0; j < no_weld_segments; j++)
     {
       std::string ContourType = tasklist.GetContourTypeOfPositionSegment(i, j);
 
@@ -142,7 +143,7 @@ void PluginTaskDescription::loadTaskDescription(
         weld_seam.poses.push_back(end);
         response->weld_seams.push_back(weld_seam);
 
-        RCLCPP_INFO_STREAM(LOGGER, "Found seam segment " << i << " of length " << segment_length);
+        // RCLCPP_INFO_STREAM(LOGGER, "Found seam segment " << i << " of length " << segment_length);
       }
 
       task_length += segment_length;

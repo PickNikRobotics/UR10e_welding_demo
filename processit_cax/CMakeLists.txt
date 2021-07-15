@@ -1,11 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(processit_cax)
 
-# Default to C99
-if(NOT CMAKE_C_STANDARD)
-  set(CMAKE_C_STANDARD 99)
-endif()
-
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -27,6 +22,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
 find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
+find_package(tinyxml_vendor REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
@@ -36,10 +32,14 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   geometry_msgs
   moveit_ros_planning
   moveit_visual_tools
+  tinyxml_vendor
   Eigen3
 )
 
-include_directories(include)
+include_directories(
+  include
+  ${EIGEN3_INCLUDE_DIR}
+)
 
 # Add TaskDescription Library (non-ROS!)
 add_library (TaskDescription SHARED
@@ -47,12 +47,6 @@ add_library (TaskDescription SHARED
   include/TaskDescription/TaskDefinition.h
   include/TaskDescription/Templates.h
   include/TaskDescription/WeldSegment.h
-  include/tinyxml/tinyxml.cpp
-  include/tinyxml/tinyxml.h
-  include/tinyxml/tinystr.cpp
-  include/tinyxml/tinystr.h
-  include/tinyxml/tinyxmlparser.cpp
-  include/tinyxml/tinyxmlerror.cpp
   src/TaskDescription/Contour.cpp
   src/TaskDescription/TaskDefinition.cpp
   src/TaskDescription/WeldSegment.cpp
@@ -74,6 +68,9 @@ ament_target_dependencies(plugin_task_description_test_node ${THIS_PACKAGE_INCLU
 ament_export_include_directories(include)
 ament_export_libraries(TaskDescription)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
+
+# Install header files
+install(DIRECTORY include/ DESTINATION include)
 
 install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME}
