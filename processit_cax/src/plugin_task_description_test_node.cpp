@@ -11,7 +11,10 @@
 // #include <rviz_visual_tools/rviz_visual_tools.hpp>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <geometry_msgs/msg/pose.hpp>
+#include <geometry_msgs/msg/pose_stamped.hpp>
 #include <processit_msgs/srv/load_task_description.hpp>
+#include <tf2/convert.h>
+#include <tf2_eigen/tf2_eigen.h>
 
 // tmp
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -47,6 +50,7 @@ public:
     visual_tools_->removeAllCollisionObjects();
     visual_tools_->triggerPlanningSceneUpdate();
 
+    // TODO currently only hardcoded pose
     Eigen::Isometry3d workpiece_pose = Eigen::Isometry3d::Identity();
     workpiece_pose.translation().x() = 0.1;
     workpiece_pose.translation().y() = -0.2;
@@ -62,13 +66,20 @@ public:
     // Service call to load a task description
     rclcpp::Client<processit_msgs::srv::LoadTaskDescription>::SharedPtr client =
         node_->create_client<processit_msgs::srv::LoadTaskDescription>("plugin_task_description/load_task_description");
-
     auto request = std::make_shared<processit_msgs::srv::LoadTaskDescription::Request>();
+
+    // Set task description filename
     std::string task_file = workpiece_path + ".xml";
     RCLCPP_INFO(LOGGER, "Loading task " + task_file);
     request->task_description_file = task_file;
 
-    while (!client->wait_for_service(2s))
+    // Set workpiece pose (task description is relative to workpiece frame)
+    geometry_msgs::msg::PoseStamped workpiece_pose_stamped;
+    workpiece_pose_stamped.header.frame_id = "world";
+    workpiece_pose_stamped.pose = tf2::toMsg(workpiece_pose);
+    request->workpiece_pose = workpiece_pose_stamped;
+
+    while (!client->wait_for_service(1s))
     {
       RCLCPP_INFO(LOGGER, "service not available, waiting again...");
     }
@@ -76,6 +87,15 @@ public:
     processit_msgs::srv::LoadTaskDescription::Response::SharedPtr response;
     auto result = client->async_send_request(request);
     response = result.get();
+
+    for (auto const& weld_seam : response->weld_seams)
+    {
+      for (auto const& pose : weld_seam.poses)
+      {
+        RCLCPP_INFO(LOGGER, "Weld seam position " + std::to_string(pose.position.x) + "  " +
+                                std::to_string(pose.position.y) + +"  " + std::to_string(pose.position.z));
+      }
+    }
 
     RCLCPP_INFO_STREAM(LOGGER, "success" << response->success);
   }

@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.5)
 project(processit_cax)
 
+# Default to C99
+if(NOT CMAKE_C_STANDARD)
+  set(CMAKE_C_STANDARD 99)
+endif()
+
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -21,6 +26,7 @@ find_package(processit_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
 find_package(moveit_visual_tools REQUIRED)
+find_package(tf2_eigen REQUIRED)
 find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
 find_package(tinyxml_vendor REQUIRED)
 
@@ -32,6 +38,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   geometry_msgs
   moveit_ros_planning
   moveit_visual_tools
+  tf2_eigen
   tinyxml_vendor
   Eigen3
 )
@@ -43,15 +50,15 @@ include_directories(
 
 # Add TaskDescription Library (non-ROS!)
 add_library (TaskDescription SHARED
-  include/TaskDescription/Contour.h
-  include/TaskDescription/TaskDefinition.h
-  include/TaskDescription/Templates.h
-  include/TaskDescription/WeldSegment.h
+  # include/TaskDescription/Contour.h
+  # include/TaskDescription/TaskDefinition.h
+  # include/TaskDescription/Templates.h
+  # include/TaskDescription/WeldSegment.h
   src/TaskDescription/Contour.cpp
   src/TaskDescription/TaskDefinition.cpp
   src/TaskDescription/WeldSegment.cpp
 )
-target_link_libraries(TaskDescription ${TinyXML_LIBS} Eigen3::Eigen)
+# target_link_libraries(TaskDescription ${TinyXML_LIBS} Eigen3::Eigen)
 
 # Add ROS wrapper for task description
 add_executable(plugin_task_description
@@ -59,7 +66,7 @@ add_executable(plugin_task_description
   src/plugin_task_description.cpp
 )
 ament_target_dependencies(plugin_task_description ${THIS_PACKAGE_INCLUDE_DEPENDS})
-target_link_libraries(plugin_task_description Eigen3::Eigen TaskDescription)
+target_link_libraries(plugin_task_description TaskDescription)
 
 # Add Test node for task description plugin
 add_executable(plugin_task_description_test_node src/plugin_task_description_test_node.cpp)

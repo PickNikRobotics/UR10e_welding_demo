@@ -8,6 +8,8 @@
 
 // ROS
 #include <visualization_msgs/msg/marker.h>
+#include <tf2/convert.h>
+#include <tf2_eigen/tf2_eigen.h>
 
 namespace processit_cax
 {
@@ -89,6 +91,8 @@ void PluginTaskDescription::loadTaskDescription(
   std::string int_marker_id_start, int_marker_id_end, int_marker_id_center, int_marker_id_line;
   tasklist.ReadXML(request->task_description_file);
   std::string manufacturingSubFrameID;
+  Eigen::Isometry3d workpiece_pose;
+  tf2::fromMsg(request->workpiece_pose.pose, workpiece_pose);
 
   // Scaling the translation (given in [mm], should be in [m]
   double unit_scaling = 0.001;
@@ -135,6 +139,8 @@ void PluginTaskDescription::loadTaskDescription(
         // Eigen::Quaternion<double> factor(cos(a / 2), sin(a / 2), 0, 0);
         // q = q * factor;
         // int_marker_id_line = addLine(seam_count, unit_scaling * segment_length, positionVectorCenter, q);
+
+        // TODO Transform to workpiece frame
 
         geometry_msgs::msg::Pose start = getPose(positionVectorStart, q);
         geometry_msgs::msg::Pose end = getPose(positionVectorEnd, q);
