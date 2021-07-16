@@ -345,6 +345,10 @@ def generate_launch_description():
         },
     }
 
+    # Get parameters for the Servo node
+    servo_yaml = load_yaml("hybrid_planning_demo", "config/servo_solver.yaml")
+    servo_params = {"moveit_servo": servo_yaml}
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package="moveit_ros_move_group",
@@ -499,6 +503,7 @@ def generate_launch_description():
                     robot_description,
                     robot_description_semantic,
                     kinematics_yaml,
+                    servo_params,
                 ],
             ),
             ComposableNode(
