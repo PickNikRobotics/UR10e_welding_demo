@@ -10,9 +10,11 @@
 // ROS
 #include <rclcpp/rclcpp.hpp>
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
-// #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 // #include <tf2_ros/transform_listener.h>
 // #include <ros/package.h>
+#include <geometry_msgs/msg/pose.h>
+#include <geometry_msgs/msg/transform.h>
 
 // MoveIt
 // #include <moveit/planning_scene/planning_scene.h>
@@ -47,12 +49,11 @@ public:
   // Adding a new stage
   void addStage(std::string stage_caption, std::string manufacturingSubFrameID, std::string planner_id, double velocity);
   void addStage(std::string stage_caption, std::string manufacturingSubFrameID, std::string manufacturingToTaskFrameID,
-                geometry_msgs::Transform stage_offset, std::string planner_id, double velocity);
-  void addStage(std::string stage_caption, geometry_msgs::Pose feature_frame, std::string planner_id);
+                geometry_msgs::msg::Transform stage_offset, std::string planner_id, double velocity);
 
   // Setting a stage offset
   void setTaskTransformOffset(double x, double y, double z, double roll, double pitch, double yaw);
-  void setTaskTransformOffset(geometry_msgs::Transform new_task_transform);
+  void setTaskTransformOffset(geometry_msgs::msg::Transform new_task_transform);
 
   // Planning of the motion
   bool plan();
@@ -88,7 +89,7 @@ private:
   std::string planner_plugin_;
 
   // Task transform
-  geometry_msgs::Transform task_transform_;
+  geometry_msgs::msg::Transform task_transform_;
   double task_transform_x_ = 0;
   double task_transform_y_ = 0;
   double task_transform_z_ = 0;
@@ -152,7 +153,7 @@ private:
   std::string welding_tcp_frame_;   //"welding_gun" // "welding_tcp"
 
   // Execution
-  actionlib::SimpleActionClient<moveit_task_constructor_msgs::ExecuteTaskSolutionAction> execute_;
+  rclcpp_action::Client<moveit_task_constructor_msgs::action::ExecuteTaskSolution>::SharedPtr execute_;
 };
 }  // namespace processit_tasks
 

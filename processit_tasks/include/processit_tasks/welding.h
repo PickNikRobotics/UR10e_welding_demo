@@ -8,8 +8,14 @@
 #include <yaml-cpp/yaml.h>
 
 // ROS
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+// #include <tf2_ros/transform_listener.h>
+// #include <ros/package.h>
+// #include <processit_msgs/SetDigitalOut.h>
+#include <geometry_msgs/msg/pose.h>
+#include <geometry_msgs/msg/transform.h>
 
 // MoveIt
 #include <moveit/planning_scene/planning_scene.h>
@@ -23,11 +29,15 @@
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 #include <moveit_task_constructor_msgs/ExecuteTaskSolutionAction.h>
 
-#include <actionlib/client/simple_action_client.h>
-#include <actionlib/server/simple_action_server.h>
+#include <rclcpp_action/rclcpp_action.hpp>
 
 // MTC Welding IPA
 #include <processit_tasks/cartesian_task.h>
+
+// YAML
+#include <yaml-cpp/yaml.h>
+
+// ROS
 
 namespace processit_tasks
 {
@@ -36,7 +46,7 @@ using namespace moveit::task_constructor;
 class Welding
 {
 public:
-  Welding(const int task_id, const int segment_id, const ros::NodeHandle& nh);
+  Welding(const int task_id, const int segment_id, const rclcpp::Node::SharedPtr& node);
   ~Welding() = default;
 
   // Welding of Fillet weld seam
@@ -79,7 +89,7 @@ private:
   // Loads the welding layout from a YAML file
   void loadWeldingLayout();
 
-  ros::NodeHandle nh_;
+  rclcpp::Node::SharedPtr& node_;
 
   // Service client for welding
   ros::ServiceClient welding_src_client_;

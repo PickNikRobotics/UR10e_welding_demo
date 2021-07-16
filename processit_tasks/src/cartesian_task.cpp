@@ -4,70 +4,45 @@
 namespace processit_tasks
 {
 using namespace moveit::task_constructor;
-const rclcpp::Logger LOGGER = rclcpp::get_logger("processit_tasks");
+const rclcpp::Logger LOGGER = rclcpp::get_logger("cartesian_task");
 
-CartesianTask::CartesianTask(rclcpp::Node::SharedPtr& node) : execute_("execute_task_solution", true)
+CartesianTask::CartesianTask(rclcpp::Node::SharedPtr& node)
 {
   node_ = node;
+  execute_ = rclcpp_action::create_client<moveit_task_constructor_msgs::action::ExecuteTaskSolution>(
+      node_, "execute_task_solution");
 }
 
 void CartesianTask::loadParameters()
 {
   RCLCPP_INFO(LOGGER, "[CartesianTask instance]: Loading task parameters");
-  ros::NodeHandle pnh("~");
 
   // Critical parameters (no default exists => shutdown if loading fails)
   size_t critical_errors = 0;
-  critical_errors += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_arm_group_name", arm_group_name_) ||
-                       rosparam_shortcuts::get(LOGGER, pnh, "arm_group_name", arm_group_name_));
-  critical_errors += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_moveit_ee_name", moveit_ee_name_) ||
-                       rosparam_shortcuts::get(LOGGER, pnh, "moveit_ee_name", moveit_ee_name_));
-  critical_errors += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_welding_group_name", welding_group_name_) ||
-                       rosparam_shortcuts::get(LOGGER, pnh, "welding_group_name", welding_group_name_));
-  critical_errors += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_welding_tcp_frame", welding_tcp_frame_) ||
-                       rosparam_shortcuts::get(LOGGER, pnh, "welding_tcp_frame", welding_tcp_frame_));
+  critical_errors += rosparam_shortcuts::get(node_, "arm_group_name", arm_group_name_);
+  critical_errors += rosparam_shortcuts::get(node_, "moveit_ee_name", moveit_ee_name_);
+  critical_errors += rosparam_shortcuts::get(node_, "welding_group_name", welding_group_name_);
+  critical_errors += rosparam_shortcuts::get(node_, "welding_tcp_frame", welding_tcp_frame_);
 
-  rosparam_shortcuts::shutdownIfError(LOGGER, critical_errors);
+  rosparam_shortcuts::shutdownIfError(critical_errors);
 
   // Optional parameters (default value exists => no shutdown required if loading fails)
   size_t warnings = 0;
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_max_acceleration_scaling", max_acceleration_scaling_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "max_acceleration_scaling", max_acceleration_scaling_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_via_max_joint_velocity", via_max_joint_velocity_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "via_max_joint_velocity", via_max_joint_velocity_));
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_away_max_joint_velocity", away_max_joint_velocity_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "away_max_joint_velocity", away_max_joint_velocity_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_via_velocity", via_velocity_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "via_velocity", via_velocity_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_cartesian_velocity", cartesian_velocity_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "cartesian_velocity", cartesian_velocity_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_cartesian_rot_velocity", cartesian_rot_velocity_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "cartesian_rot_velocity", cartesian_rot_velocity_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_step_size", step_size_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "step_size", step_size_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_num_planning_attempts", num_planning_attempts_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "num_planning_attempts", num_planning_attempts_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_goal_joint_tolerance", goal_joint_tolerance_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "goal_joint_tolerance", goal_joint_tolerance_));
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_goal_position_tolerance", goal_position_tolerance_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "goal_position_tolerance", goal_position_tolerance_));
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_goal_orientation_tolerance", goal_orientation_tolerance_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "goal_orientation_tolerance", goal_orientation_tolerance_));
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_planning_time_free_space", planning_time_free_space_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "planning_time_free_space", planning_time_free_space_));
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_planning_time_constrained", planning_time_constrained_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "planning_time_constrained", planning_time_constrained_));
-  warnings +=
-      !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_planning_time_collisions", planning_time_collisions_) ||
-        rosparam_shortcuts::get(LOGGER, pnh, "planning_time_collisions", planning_time_collisions_));
-  warnings += !(rosparam_shortcuts::get(LOGGER, pnh, task_name_ + "_max_solutions", max_solutions_) ||
-                rosparam_shortcuts::get(LOGGER, pnh, "max_solutions", max_solutions_));
+  warnings += rosparam_shortcuts::get(node_, "max_acceleration_scaling", max_acceleration_scaling_);
+  warnings += rosparam_shortcuts::get(node_, "via_max_joint_velocity", via_max_joint_velocity_);
+  warnings += rosparam_shortcuts::get(node_, "away_max_joint_velocity", away_max_joint_velocity_);
+  warnings += rosparam_shortcuts::get(node_, "via_velocity", via_velocity_);
+  warnings += rosparam_shortcuts::get(node_, "cartesian_velocity", cartesian_velocity_);
+  warnings += rosparam_shortcuts::get(node_, "cartesian_rot_velocity", cartesian_rot_velocity_);
+  warnings += rosparam_shortcuts::get(node_, "step_size", step_size_);
+  warnings += rosparam_shortcuts::get(node_, "num_planning_attempts", num_planning_attempts_);
+  warnings += rosparam_shortcuts::get(node_, "goal_joint_tolerance", goal_joint_tolerance_);
+  warnings += rosparam_shortcuts::get(node_, "goal_position_tolerance", goal_position_tolerance_);
+  warnings += rosparam_shortcuts::get(node_, "goal_orientation_tolerance", goal_orientation_tolerance_);
+  warnings += rosparam_shortcuts::get(node_, "planning_time_free_space", planning_time_free_space_);
+  warnings += rosparam_shortcuts::get(node_, "planning_time_constrained", planning_time_constrained_);
+  warnings += rosparam_shortcuts::get(node_, "planning_time_collisions", planning_time_collisions_);
+  warnings += rosparam_shortcuts::get(node_, "max_solutions", max_solutions_);
 
   RCLCPP_WARN(LOGGER, "Failed to load optional parameters.");
 }
@@ -78,9 +53,9 @@ void CartesianTask::init(std::string task_name, std::string task_caption)
   task_caption_ = task_caption;
 
   loadParameters();
-  nh_.param<std::string>("/move_group/planning_plugin", planner_plugin_, "");
-  nh_.param<double>("/robot_description_planning/cartesian_limits/max_trans_vel", max_trans_vel_, 0.0);
-  nh_.param<double>("/robot_description_planning/cartesian_limits/max_rot_vel", max_rot_vel_, 0.0);
+  rosparam_shortcuts::get(node_, "/move_group/planning_plugin", planner_plugin_);
+  rosparam_shortcuts::get(node_, "/robot_description_planning/cartesian_limits/max_trans_vel", max_trans_vel_);
+  rosparam_shortcuts::get(node_, "/robot_description_planning/cartesian_limits/max_rot_vel", max_rot_vel_);
 
   RCLCPP_INFO(LOGGER, "Initializing task pipeline");
 
@@ -148,7 +123,7 @@ void CartesianTask::setTaskTransformOffset(double x, double y, double z, double 
   applyTaskTransformOffset();
 }
 
-void CartesianTask::setTaskTransformOffset(geometry_msgs::Transform new_task_transform)
+void CartesianTask::setTaskTransformOffset(geometry_msgs::msg::Transform new_task_transform)
 {
   task_transform_ = new_task_transform;
 }
@@ -250,14 +225,14 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
   if (planner_id == linear_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
   {
     stage->setTaskStart(manufacturingSubFrameID, task_transform_);
-    moveit_msgs::Constraints path_constraints = stage->setLinConstraints();
+    moveit_msgs::msg::Constraints path_constraints = stage->setLinConstraints();
     stage->setPathConstraints(path_constraints);
   }
   else if (planner_id == circular_planner_id_)
   {
     stage->setTaskStart(manufacturingSubFrameID, task_transform_);
     stage->setTaskInterim(manufacturingSubFrameID, task_transform_);
-    moveit_msgs::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
+    moveit_msgs::msg::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
     stage->setPathConstraints(path_constraints);
   }
   else if (planner_id == curve_planner_id_)
@@ -287,7 +262,7 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
  * @param velocity The velocity which the robot should have
  */
 void CartesianTask::addStage(std::string stage_caption, std::string manufacturingSubFrameID,
-                             std::string manufacturingToTaskFrameID, geometry_msgs::Transform stage_offset,
+                             std::string manufacturingToTaskFrameID, geometry_msgs::msg::Transform stage_offset,
                              std::string planner_id, double velocity)
 {
   // Create an instance of the planner and set the parameters for it
@@ -376,14 +351,14 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
   if (planner_id == linear_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
   {
     stage->setTaskStart(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
-    moveit_msgs::Constraints path_constraints = stage->setLinConstraints();
+    moveit_msgs::msg::Constraints path_constraints = stage->setLinConstraints();
     stage->setPathConstraints(path_constraints);
   }
   else if (planner_id == circular_planner_id_)
   {
     stage->setTaskStart(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
     stage->setTaskInterim(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
-    moveit_msgs::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
+    moveit_msgs::msg::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
     stage->setPathConstraints(path_constraints);
   }
   else if (planner_id == curve_planner_id_)
@@ -400,20 +375,15 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
   t.add(std::move(stage));
 }
 
-void CartesianTask::addStage(std::string stage_caption, geometry_msgs::Pose feature_frame, std::string planner_id)
-{
-  // NYI: Add a stage with some explicitly given frame to be approached
-}
-
 bool CartesianTask::plan()
 {
   RCLCPP_INFO(LOGGER, "Start searching for task solutions");
-  ros::NodeHandle pnh("~");
-  int max_solutions = pnh.param<int>("max_solutions", max_solutions_);
+  //   ros::NodeHandle pnh("~");
+  //   int max_solutions = pnh.param<int>("max_solutions", max_solutions_);
 
   try
   {
-    task_->plan(max_solutions);
+    task_->plan(max_solutions_);
   }
   catch (InitStageException& e)
   {
@@ -431,15 +401,15 @@ bool CartesianTask::plan()
 bool CartesianTask::execute()
 {
   RCLCPP_INFO(LOGGER, "Executing solution trajectory");
-  moveit_task_constructor_msgs::ExecuteTaskSolutionGoal execute_goal;
+  moveit_task_constructor_msgs::action::ExecuteTaskSolutionGoal execute_goal;
   task_->solutions().front()->fillMessage(execute_goal.solution);
-  execute_.sendGoal(execute_goal);
-  execute_.waitForResult();
-  moveit_msgs::MoveItErrorCodes execute_result = execute_.getResult()->error_code;
+  execute_->sendGoal(execute_goal);
+  execute_->waitForResult();
+  moveit_msgs::msg::MoveItErrorCodes execute_result = execute_->getResult()->error_code;
 
-  if (execute_result.val != moveit_msgs::MoveItErrorCodes::SUCCESS)
+  if (execute_result->val != moveit_msg::msgs::MoveItErrorCodes::SUCCESS)
   {
-    RCLCPP_ERROR_STREAM(LOGGER, "Task execution failed and returned: " << execute_.getState().toString());
+    RCLCPP_ERROR_STREAM(LOGGER, "Task execution failed and returned: " << execute_->getState().toString());
     return false;
   }
 

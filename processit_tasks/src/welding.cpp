@@ -1,24 +1,17 @@
-// YAML
-#include <yaml-cpp/yaml.h>
-
-// ROS
-#include <tf2_ros/transform_listener.h>
-#include <ros/package.h>
-#include <processit_msgs/SetDigitalOut.h>
-
 // MTC Welding IPA
 #include <processit_tasks/welding.h>
-#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace processit_tasks
 {
 using namespace moveit::task_constructor;
+const rclcpp::Logger LOGGER = rclcpp::get_logger("welding");
 
 constexpr char LOGNAME[] = "welding";
-Welding::Welding(const int task_id, const int segment_id, const ros::NodeHandle& nh)
-  : nh_(nh), task_id_(task_id), segment_id_(segment_id), execute_("execute_task_solution", true), cartesian_task_(nh_)
+Welding::Welding(const int task_id, const int segment_id, const rclcpp::Node::SharedPtr& node)
+  : task_id_(task_id), segment_id_(segment_id), execute_("execute_task_solution", true), cartesian_task_(node)
 {
-  welding_src_client_ = nh_.serviceClient<processit_msgs::SetDigitalOut>("/io_controller/set_io");
+  node_ = node;
+  welding_src_client_ = node_->create_client<processit_msgs::SetDigitalOut>("/io_controller/set_io");
   loadParameters();
   loadWeldingLayout();
   nh_.param<std::string>("/move_group/planning_plugin", planner_plugin_, "");
@@ -31,25 +24,25 @@ void Welding::loadParameters()
 
   // planner_interface configuration
   size_t errors = 0;
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "max_acceleration_scaling", max_acceleration_scaling_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "via_max_joint_velocity", via_max_joint_velocity_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "away_max_joint_velocity", away_max_joint_velocity_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "cartesian_velocity", cartesian_velocity_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "via_velocity", via_velocity_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "welding_velocity", welding_velocity_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "linear_planner_id", linear_planner_id_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "circular_planner_id", circular_planner_id_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "curve_planner_id", curve_planner_id_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "joint_space_planner_id", joint_space_planner_id_);
+  errors += !rosparam_shortcuts::get(node_, "max_acceleration_scaling", max_acceleration_scaling_);
+  errors += !rosparam_shortcuts::get(node_, "via_max_joint_velocity", via_max_joint_velocity_);
+  errors += !rosparam_shortcuts::get(node_, "away_max_joint_velocity", away_max_joint_velocity_);
+  errors += !rosparam_shortcuts::get(node_, "cartesian_velocity", cartesian_velocity_);
+  errors += !rosparam_shortcuts::get(node_, "via_velocity", via_velocity_);
+  errors += !rosparam_shortcuts::get(node_, "welding_velocity", welding_velocity_);
+  errors += !rosparam_shortcuts::get(node_, "linear_planner_id", linear_planner_id_);
+  errors += !rosparam_shortcuts::get(node_, "circular_planner_id", circular_planner_id_);
+  errors += !rosparam_shortcuts::get(node_, "curve_planner_id", curve_planner_id_);
+  errors += !rosparam_shortcuts::get(node_, "joint_space_planner_id", joint_space_planner_id_);
 
   // Offsets for specific sub-tasks
   //// Welding
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "offset_welding_approach_z", offset_welding_approach_z_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "offset_welding_z", offset_welding_z_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "offset_welding_y", offset_welding_y_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "offset_welding_x", offset_welding_x_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "offset_welding_angle", offset_welding_angle_);
-  errors += !rosparam_shortcuts::get(LOGNAME, pnh, "offset_welding_speed", offset_welding_speed_);
+  errors += !rosparam_shortcuts::get(node_, "offset_welding_approach_z", offset_welding_approach_z_);
+  errors += !rosparam_shortcuts::get(node_, "offset_welding_z", offset_welding_z_);
+  errors += !rosparam_shortcuts::get(node_, "offset_welding_y", offset_welding_y_);
+  errors += !rosparam_shortcuts::get(node_, "offset_welding_x", offset_welding_x_);
+  errors += !rosparam_shortcuts::get(node_, "offset_welding_angle", offset_welding_angle_);
+  errors += !rosparam_shortcuts::get(node_, "offset_welding_speed", offset_welding_speed_);
 
   rosparam_shortcuts::shutdownIfError(LOGNAME, errors);
 }
@@ -124,7 +117,7 @@ void Welding::approach()
   // Stage: Approach start of welding seam (distance from seam: offset_welding_approach_z_)
   if (pass_id_ == -1)
   {
-    geometry_msgs::Transform stage_offset;
+    geometry_msgs::msg::Transform stage_offset;
     stage_offset.translation.z = -distance_convert_ * offset_welding_approach_z_;
     // Hack because robot configuration change with Pilz PTP works bad
     if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
@@ -136,7 +129,7 @@ void Welding::approach()
   }
   else
   {
-    geometry_msgs::Transform task_transform = task_transform_;
+    geometry_msgs::msg::Transform task_transform = task_transform_;
     task_transform.translation.z -= distance_convert_ * offset_welding_approach_z_;
     cartesian_task_.setTaskTransformOffset(task_transform);
     // Hack because robot configuration change with Pilz PTP works bad
@@ -150,7 +143,7 @@ void Welding::approach()
   cartesian_task_.setTaskTransformOffset(task_transform_);
   if (pass_id_ == -1)
   {
-    geometry_msgs::Transform stage_offset;
+    geometry_msgs::msg::Transform stage_offset;
     cartesian_task_.addStage("Start state root seam", task_name_ + "_start", "ManufacturingToTaskFrame", stage_offset,
                              joint_space_planner_id_, away_max_joint_velocity_);
   }
@@ -194,7 +187,7 @@ void Welding::weld()
   cartesian_task_.setTaskTransformOffset(task_transform_);
   if (pass_id_ == -1)
   {
-    geometry_msgs::Transform stage_offset;
+    geometry_msgs::msg::Transform stage_offset;
     if (segment_id_ == 1)  // HACK to plan circular path for segment 1. Should be replaced by reading task_description
                            // or reading the TF tree for _circ
     {
@@ -272,14 +265,14 @@ void Welding::retrieve()
   // Stage: Retrieve from welding seam with distance offset_welding_approach_z_
   if (pass_id_ == -1)
   {
-    geometry_msgs::Transform stage_offset;
+    geometry_msgs::msg::Transform stage_offset;
     stage_offset.translation.z = -distance_convert_ * offset_welding_approach_z_;
     cartesian_task_.addStage("Retrieve path", task_name_ + "_end", "ManufacturingToTaskFrame", stage_offset,
                              joint_space_planner_id_, away_max_joint_velocity_);
   }
   else
   {
-    geometry_msgs::Transform task_transform = task_transform_;
+    geometry_msgs::msg::Transform task_transform = task_transform_;
     task_transform.translation.z -= distance_convert_ * offset_welding_approach_z_;
     cartesian_task_.setTaskTransformOffset(task_transform);
     cartesian_task_.addStage("Retrieve path", task_name_ + "_end", joint_space_planner_id_, away_max_joint_velocity_);
