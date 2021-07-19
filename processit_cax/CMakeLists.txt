@@ -79,10 +79,6 @@ ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 # Install header files
 install(DIRECTORY include/ DESTINATION include)
 
-install(DIRECTORY launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
 install(
   TARGETS
     TaskDescription
