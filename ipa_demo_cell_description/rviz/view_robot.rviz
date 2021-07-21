@@ -579,7 +579,7 @@ Visualization Manager:
       Trail Step Size: 1
       Value: true
     - Class: moveit_rviz_plugin/PlanningScene
-      Enabled: true
+      Enabled: false
       Move Group Namespace: ""
       Name: PlanningScene
       Planning Scene Topic: /moveit_visual_tools

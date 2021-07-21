@@ -42,7 +42,7 @@ public:
     // ******************* Step 1 load workpiece
     // Initialize and setup moveit visual tools
     moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(node_, "world", "/moveit_visual_tools"));
+    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(node_, "world", "/planning_scene"));
     visual_tools_->loadPlanningSceneMonitor();
     visual_tools_->loadMarkerPub(true);
     visual_tools_->setManualSceneUpdating();
