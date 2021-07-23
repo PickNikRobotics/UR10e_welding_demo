@@ -5,7 +5,7 @@ trajectory_operator_plugin_name: "moveit_hybrid_planning/SimpleSampler"
 local_constraint_solver_plugin_name: "moveit_hybrid_planning/ServoSolver"
 local_planning_frequency: 100.0
 global_solution_topic: "global_trajectory"
-local_solution_topic: "/joint_trajectory_controller/joint_trajectory"
+local_solution_topic: "/joint_trajectory_controller/joint_trajectory_NOT_HERE"
 local_solution_topic_type: "trajectory_msgs/JointTrajectory" # or "std_msgs/Float64MultiArray"
 
 # SimpleSampler param
