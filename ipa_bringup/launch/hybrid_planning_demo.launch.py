@@ -538,7 +538,6 @@ def generate_launch_description():
         robot_controller_spawner,
         move_group_node,
         mongodb_server_node,
-        test_request_node,
         container,
     ]
 
