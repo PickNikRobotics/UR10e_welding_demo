@@ -1,0 +1,40 @@
+---
+common:
+  # before_commands will be executed in each pane before doing anything else. Use this e.g. for
+  #   - sourcing an environment
+  #   - ssh-ing to another machine
+  before_commands:
+    - source ${workspace_root}/install/setup.bash # before commands can be specified global and per window
+  # The default window will be the one displayed when first connecting to the tmux session
+  default_window: demo
+parameters:
+  # Parameters specified here can be used below and they can be overwritten at runtime
+  workspace_root: ${PWD}
+  ur_type: ur5e
+  robot_ip: yyy.yyy.yyy.yyy
+  use_fake_hardware: true
+  launch_rviz: true
+# Everything will be opened in windows. Windows can have multiple splits.
+windows:
+  - name: demo_environment
+    layout: even-vertical # One can use the default layouts specified by tmux
+    splits:
+      - commands:
+        - ros2 launch ipa_bringup hybrid_planning_env.launch.py ur_type:=${ur_type} robot_ip:=${robot_ip} use_fake_hardware:=${use_fake_hardware}
+      - commands:
+        - ros2 launch ipa_bringup rviz.launch.py ur_type:=${ur_type} robot_ip:=${robot_ip} use_fake_hardware:=${use_fake_hardware} launch_rviz:=${launch_rviz}
+  - name: moveit_env
+    layout: even-vertical
+    splits:
+      - commands:
+        - ros2 launch ipa_bringup hybrid_planning.launch.py ur_type:=${ur_type} robot_ip:=${robot_ip} use_fake_hardware:=${use_fake_hardware}
+  - name: demo
+    layout: even-vertical
+    splits:
+      - commands:
+        - printf "\n\n Use the RViz Motion Planning widget to plan and execute to the state 'pre_welding_configuration' \n Afterwards run 'ros2 launch ipa_bringup send_hybrid_goal.launch.py' in this window \n\n"
+      - commands:
+        - printf "\n\n Run 'ros2 run ipa_bringup servo_keyboard_input' here. \n As the robot starts the Cartesian path, you should be able to use the ’6’ key to rotate the last joint. ’R’ toggles the directon of rotation \n\n"
+  - name: help
+    commands:
+      - printf "\n\n To find more information about catmux visit https://github.com/fmauch/catmux \n To close the demo run 'tmux kill-session' in one of the open terminal windows \n\n"

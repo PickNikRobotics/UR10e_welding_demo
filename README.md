@@ -57,3 +57,15 @@ ros2 run ipa_bringup servo_keyboard_input
 
 As the robot starts the Cartesian path, you should be able to use the `6` key to rotate the last joint. `R` toggles the directon of rotation.
 > Note: you must have the `servo_keyboard_input` terminal selected for it to send commands
+
+### Option B: Launch demo with catmux
+If you have not done it yet, install [catmux](https://github.com/fmauch/catmux)
+```sh
+pip3 install --user catmux
+```
+Run the demo with
+```sh
+cd YOUR_WORKSPACE_ROOT
+source install/setup.bash
+catmux_create_session $(ros2 pkg prefix ipa_bringup)/share/ipa_bringup/config/catmux_session_config.yaml>
+```
