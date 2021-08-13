@@ -39,7 +39,7 @@
 #include <moveit/planning_scene/planning_scene.h>
 #include <moveit/robot_state/conversions.h>
 
-namespace moveit_hybrid_planning
+namespace hybrid_planning_demo
 {
 const rclcpp::Logger LOGGER = rclcpp::get_logger("local_planner_component");
 
@@ -197,8 +197,8 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
 
   return feedback_result;
 }
-}  // namespace moveit_hybrid_planning
+}  // namespace hybrid_planning_demo
 
 #include <pluginlib/class_list_macros.hpp>
 
-PLUGINLIB_EXPORT_CLASS(moveit_hybrid_planning::ServoSolver, moveit_hybrid_planning::LocalConstraintSolverInterface);
+PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::ServoSolver, moveit_hybrid_planning::LocalConstraintSolverInterface);

@@ -8,11 +8,13 @@ find_package(moveit_task_constructor_core REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
+find_package(pluginlib REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   moveit_hybrid_planning
   moveit_servo
   moveit_task_constructor_core
+  pluginlib
   rclcpp
   rclcpp_action
   rclcpp_components
@@ -52,9 +54,12 @@ install(
   RUNTIME DESTINATION lib/${PROJECT_NAME}
 )
 
-pluginlib_export_plugin_description_file(hybrid_planning_demo servo_solver_plugin.xml)
-pluginlib_export_plugin_description_file(hybrid_planning_demo simple_servo_sampler_plugin.xml)
+pluginlib_export_plugin_description_file(moveit_hybrid_planning plugins.xml)
 
+ament_export_libraries(
+  servo_local_solver
+  servo_sampler
+)
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 ament_export_dependencies(${THIS_PACKAGE_INCLUDE_DEPENDS})
 ament_package()

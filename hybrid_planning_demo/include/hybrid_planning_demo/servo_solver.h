@@ -44,9 +44,9 @@
 
 #include <moveit_servo/servo.h>
 
-namespace moveit_hybrid_planning
+namespace hybrid_planning_demo
 {
-class ServoSolver : public LocalConstraintSolverInterface
+class ServoSolver : public moveit_hybrid_planning::LocalConstraintSolverInterface
 {
 public:
   ServoSolver(){};
@@ -90,4 +90,4 @@ private:
   // Flag to indicate that replanning is requested
   bool feedback_send_;
 };
-}  // namespace moveit_hybrid_planning
+}  // namespace hybrid_planning_demo

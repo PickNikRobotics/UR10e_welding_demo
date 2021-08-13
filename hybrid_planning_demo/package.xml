@@ -26,7 +26,5 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-    <moveit_hybrid_planning plugin="${prefix}/servo_solver_plugin.xml"/>
-    <moveit_hybrid_planning plugin="${prefix}/simple_servo_sampler_plugin.xml"/>
   </export>
 </package>

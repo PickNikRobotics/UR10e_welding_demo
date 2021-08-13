@@ -39,7 +39,7 @@
 
 #include <moveit/kinematic_constraints/utils.h>
 
-namespace moveit_hybrid_planning
+namespace hybrid_planning_demo
 {
 const rclcpp::Logger LOGGER = rclcpp::get_logger("local_planner_component");
 
@@ -133,8 +133,8 @@ double SimpleServoSampler::getTrajectoryProgress(const moveit::core::RobotState&
   }
   return 0.0;
 }
-}  // namespace moveit_hybrid_planning
+}  // namespace hybrid_planning_demo
 
 #include <pluginlib/class_list_macros.hpp>
 
-PLUGINLIB_EXPORT_CLASS(moveit_hybrid_planning::SimpleServoSampler, moveit_hybrid_planning::TrajectoryOperatorInterface);
+PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::SimpleServoSampler, moveit_hybrid_planning::TrajectoryOperatorInterface);

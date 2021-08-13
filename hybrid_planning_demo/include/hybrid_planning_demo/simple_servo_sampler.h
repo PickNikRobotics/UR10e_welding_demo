@@ -41,9 +41,9 @@
 #include <moveit/local_planner/trajectory_operator_interface.h>
 #include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
 
-namespace moveit_hybrid_planning
+namespace hybrid_planning_demo
 {
-class SimpleServoSampler : public TrajectoryOperatorInterface
+class SimpleServoSampler : public moveit_hybrid_planning::TrajectoryOperatorInterface
 {
 public:
   SimpleServoSampler(){};
@@ -66,4 +66,4 @@ private:
   moveit_msgs::action::LocalPlanner::Feedback feedback_;  // Empty feedback
   trajectory_processing::TimeOptimalTrajectoryGeneration time_parametrization_;
 };
-}  // namespace moveit_hybrid_planning
+}  // namespace hybrid_planning_demo
