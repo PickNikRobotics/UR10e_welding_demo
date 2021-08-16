@@ -166,16 +166,13 @@ public:
     robot_model_loader::RobotModelLoader robot_model_loader(node_, "robot_description");
     const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
 
-    // Create a RobotState and JointModelGroup
-    const auto robot_state = std::make_shared<moveit::core::RobotState>(robot_model);
-    const moveit::core::JointModelGroup* joint_model_group = robot_state->getJointModelGroup(planning_group);
-
-    // Configure a valid robot state
-    robot_state->setToDefaultValues(joint_model_group, "test_configuration");
+    // Get current robot state and create joint model group
+    auto curr_robot_state = planning_scene_monitor_->getStateMonitor()->getCurrentState();
+    const moveit::core::JointModelGroup* joint_model_group = curr_robot_state->getJointModelGroup(planning_group);
 
     auto goal_msg = moveit_msgs::action::HybridPlanning::Goal();
 
-    moveit::core::robotStateToRobotStateMsg(*robot_state, goal_msg.request.start_state);
+    moveit::core::robotStateToRobotStateMsg(*curr_robot_state, goal_msg.request.start_state);
     goal_msg.request.group_name = planning_group;
     goal_msg.request.num_planning_attempts = 10;
     goal_msg.request.max_velocity_scaling_factor = 0.1;
@@ -183,8 +180,13 @@ public:
     goal_msg.request.allowed_planning_time = 2.0;
     goal_msg.request.planner_id = "RRTConnectkConfigDefault";
 
+    // Set some hard-coded goal configuration for testing
     moveit::core::RobotState goal_state(robot_model);
-    std::vector<double> joint_values = { -0.19, -0.29, -1.29, -1.57, -4.53, -4.71 };
+    std::vector<double> joint_values;
+    std::map<std::string, double> current_state_values =
+        planning_scene_monitor_->getStateMonitor()->getCurrentStateValues();
+    for (auto const& x : current_state_values)
+      joint_values.push_back(x.second + 0.01);
     goal_state.setJointGroupPositions(joint_model_group, joint_values);
 
     goal_msg.request.goal_constraints.resize(1);
