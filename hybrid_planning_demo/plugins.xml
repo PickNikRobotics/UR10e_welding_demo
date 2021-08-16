@@ -1,7 +1,9 @@
-<library path="hybrid_planning_demo">
+<library path="servo_local_solver">
   <class type="hybrid_planning_demo::ServoSolver" base_class_type="moveit_hybrid_planning::LocalConstraintSolverInterface">
     <description>Uses Servo as a local solver.</description>
   </class>
+</library>
+<library path="servo_sampler">
   <class type="hybrid_planning_demo::SimpleServoSampler" base_class_type="moveit_hybrid_planning::TrajectoryOperatorInterface">
     <description>Remake of SimpleSampler to use with Servo local solver.</description>
   </class>
