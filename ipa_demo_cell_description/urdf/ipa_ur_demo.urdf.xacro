@@ -63,7 +63,7 @@
 
   <!-- Sensor calibration -->
   <!-- Set the tcp according to Hand Eye Calibration-->
-  <xacro:property name="sensor_config" value="${load_yaml('$(arg calibration_config_file)')}" />
+  <!-- <xacro:property name="sensor_config" value="${load_yaml('$(arg calibration_config_file)')}" />
   <xacro:property name="tcp_sensor" value="${sensor_config['tcp_sensor']}"/>
   <link name="tcp_sensor_link" />
   <joint name="flange_sensor_joint" type="fixed">
@@ -74,10 +74,10 @@
                  ${tcp_sensor['z']}" rpy="${tcp_sensor['roll']}
                  ${tcp_sensor['pitch']}
                  ${tcp_sensor['yaw']}"/>
-  </joint>
+  </joint> -->
 
   <!-- Set the welding gun tool-->
-  <xacro:property name="welding_gun_config" value="${load_yaml('$(arg calibration_config_file)')}" />
+  <!-- <xacro:property name="welding_gun_config" value="${load_yaml('$(arg calibration_config_file)')}" />
   <xacro:property name="tcp_welding_gun" value="${welding_gun_config['tcp_welding_gun']}"/>
   <link name="tcp_welding_gun_link" />
   <joint name="tcp_welding_gun_joint" type="fixed">
@@ -88,10 +88,10 @@
                  ${tcp_welding_gun['z']}" rpy="${tcp_welding_gun['roll']}
                  ${tcp_welding_gun['pitch']}
                  ${tcp_welding_gun['yaw']}"/>
-  </joint>
+  </joint> -->
 
   <!-- Attach the welding gun -->
-  <xacro:include filename="$(find ipa_demo_cell_description)/urdf/$(arg endeffector).urdf.xacro" />
+  <!-- <xacro:include filename="$(find ipa_demo_cell_description)/urdf/$(arg endeffector).urdf.xacro" />
   <xacro:endeffector prefix="" />
   <xacro:property name="flange_welding_gun" value="${welding_gun_config['flange_welding_gun']}"/>
   <joint name="welding_gun_joint" type="fixed">
@@ -102,6 +102,31 @@
                  ${flange_welding_gun['z']}" rpy="${flange_welding_gun['roll']}
                  ${flange_welding_gun['pitch']}
                  ${flange_welding_gun['yaw']}"/>
+  </joint> -->
+
+  <link name="tcp_welding_gun_link" >
+    <visual>
+      <origin xyz="0 0 -0.07" rpy="0 0 0" />
+      <geometry>
+        <box size="0.01 0.01 0.14" />
+        <!-- <cylinder radius="0.01" length="0.14"/> -->
+      </geometry>
+      <material name="Cyan">
+        <color rgba="0 1.0 1.0 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.07" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.14" />
+        <!-- <cylinder radius="0.01" length="0.14"/> -->
+      </geometry>
+    </collision>
+  </link>
+  <joint name="tcp_welding_gun_joint" type="fixed">
+    <parent link="wrist_3_link"/>
+    <child link="tcp_welding_gun_link"/>
+    <origin xyz="0 0 0.14" rpy="0 0 0"/>
   </joint>
 
 

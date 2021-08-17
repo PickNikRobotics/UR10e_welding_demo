@@ -69,35 +69,37 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
     t.add(std::move(current_state));
   }
 
+  /******************************************************
+   *          Joint Goal Motion                         *
+   *****************************************************/
   // Move to joint state constraints specified in goal request
   // NOTE: this assumes only joint constraints are specified
-  {
-    auto stage = std::make_unique<stages::MoveTo>("move to goal", sampling_planner);
-    stage->setGroup("ur_manipulator");
-    std::map<std::string, double> goal_state;
-    for (const auto& jc : planning_problem.goal_constraints[0].joint_constraints)
-    {
-      goal_state[jc.joint_name] = jc.position;
-    }
-    stage->setGoal(goal_state);
-    t.add(std::move(stage));
-  }
+  // {
+  //   auto stage = std::make_unique<stages::MoveTo>("move to goal", sampling_planner);
+  //   stage->setGroup("ur_manipulator");
+  //   std::map<std::string, double> goal_state;
+  //   for (const auto& jc : planning_problem.goal_constraints[0].joint_constraints)
+  //   {
+  //     goal_state[jc.joint_name] = jc.position;
+  //   }
+  //   stage->setGoal(goal_state);
+  //   t.add(std::move(stage));
+  // }
 
   /******************************************************
    *          Relative Motion                           *
    *****************************************************/
-  // {
-  //   auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
-  //   stage->properties().configureInitFrom(Stage::PARENT, { "group" });
-  //   stage->setMinMaxDistance(.01, .05);
-  //   stage->setIKFrame("tcp_welding_gun_link");
-  //   stage->properties().set("marker_ns", "retreat");
-  //   geometry_msgs::msg::Vector3Stamped vec;
-  //   vec.header.frame_id = "world";
-  //   vec.vector.z = -1.0;
-  //   stage->setDirection(vec);
-  //   t.add(std::move(stage));
-  // }
+  {
+    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
+    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    geometry_msgs::msg::Vector3Stamped vec;
+    vec.header.frame_id = "world";
+    vec.vector.y = 0.5;
+    stage->setDirection(vec);
+    t.add(std::move(stage));
+  }
 
   constexpr size_t max_solutions = 1;
   t.plan(max_solutions);

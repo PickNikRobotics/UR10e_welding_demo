@@ -1,9 +1,5 @@
 # Upstream dependencies
 repositories:
-  UR10e_welding_demo:
-    type: git
-    url: https://github.com/PickNikRobotics/UR10e_welding_demo.git
-    version: master
   Universal_Robots_Client_Library:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
@@ -19,7 +15,7 @@ repositories:
   geometric_shapes:
     type: git
     url: https://github.com/ros-planning/geometric_shapes
-    version: ros2
+    version: foxy
   moveit2:
     type: git
     # TODO(henning): switch back to upstream
