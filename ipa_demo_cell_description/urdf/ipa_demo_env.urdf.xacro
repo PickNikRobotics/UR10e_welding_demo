@@ -3,7 +3,7 @@
      Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
-  <xacro:macro name="ipa_demo_env" params="prefix">
+  <xacro:macro name="ipa_demo_env" params="prefix use_fake_hardware:=false">
     <link name="env_link">
       <inertial>
         <origin xyz="-0.0741666676689185 0.587693158719805 -8.80953956550394E-16" rpy="0 0 0" />
@@ -28,73 +28,73 @@
     </link>
 
     <!-- Add boxes for collision detection -->
-    <joint name="left_box" type="fixed">
-      <parent link="env_link" />
-      <child link="left_box" />
-      <origin xyz="0 1.5 -1.05" rpy="0 0 0" />
-    </joint>
-    <joint name="right_box" type="fixed">
-      <parent link="env_link" />
-      <child link="right_box" />
-      <origin xyz="0 1.5 1.05" rpy="0 0 0" />
-    </joint>
-    <joint name="back_box" type="fixed">
-      <parent link="env_link" />
-      <child link="back_box" />
-      <origin xyz="-1.4 1.5 0" rpy="0 0 0" />
-    </joint>
-    <!-- <joint name="front_box" type="fixed">
+    <xacro:unless value="${use_fake_hardware}">
+      <joint name="left_box" type="fixed">
         <parent link="env_link" />
-        <child link="front_box" />
-        <origin xyz="1.45 1.5 0" rpy="0 0 0" />
-      </joint> -->
-    <joint name="top_box" type="fixed">
-      <parent link="env_link" />
-      <child link="top_box" />
-      <origin xyz="0 2.35 0 " rpy="0 0 0" />
-    </joint>
+        <child link="left_box" />
+        <origin xyz="0 1.5 -1.05" rpy="0 0 0" />
+      </joint>
+      <joint name="right_box" type="fixed">
+        <parent link="env_link" />
+        <child link="right_box" />
+        <origin xyz="0 1.5 1.05" rpy="0 0 0" />
+      </joint>
+      <joint name="back_box" type="fixed">
+        <parent link="env_link" />
+        <child link="back_box" />
+        <origin xyz="-1.4 1.5 0" rpy="0 0 0" />
+      </joint>
+      <!-- <joint name="front_box" type="fixed">
+          <parent link="env_link" />
+          <child link="front_box" />
+          <origin xyz="1.45 1.5 0" rpy="0 0 0" />
+        </joint> -->
+      <joint name="top_box" type="fixed">
+        <parent link="env_link" />
+        <child link="top_box" />
+        <origin xyz="0 2.35 0 " rpy="0 0 0" />
+      </joint>
 
-    <link name="left_box">
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="3.0 3.0 0.1"/>
-        </geometry>
-      </collision>
-    </link>
-    <link name="right_box">
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="3.0 3.0 0.1"/>
-        </geometry>
-      </collision>
-    </link>
-    <link name="back_box">
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.1 3.0 3.0"/>
-        </geometry>
-      </collision>
-    </link>
-    <!-- <link name="front_box">
+      <link name="left_box">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="3.0 3.0 0.1"/>
+          </geometry>
+        </collision>
+      </link>
+      <link name="right_box">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="3.0 3.0 0.1"/>
+          </geometry>
+        </collision>
+      </link>
+      <link name="back_box">
         <collision>
           <origin xyz="0 0 0" rpy="0 0 0"/>
           <geometry>
             <box size="0.1 3.0 3.0"/>
           </geometry>
         </collision>
-      </link> -->
-    <link name="top_box">
-      <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="3.0 0.1 3.0"/>
-        </geometry>
-      </collision>
-    </link>
+      </link>
+      <!-- <link name="front_box">
+          <collision>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+              <box size="0.1 3.0 3.0"/>
+            </geometry>
+          </collision>
+        </link> -->
+      <link name="top_box">
+        <collision>
+          <origin xyz="0 0 0" rpy="0 0 0"/>
+          <geometry>
+            <box size="3.0 0.1 3.0"/>
+          </geometry>
+        </collision>
+      </link>
+    </xacro:unless>
   </xacro:macro>
-
-
 </robot>
