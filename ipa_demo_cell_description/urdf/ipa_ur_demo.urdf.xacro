@@ -47,7 +47,9 @@
   <!-- Include the cell and attach it to the world-->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />
   <link name="world" />
-  <xacro:ipa_demo_env prefix="" />
+  <xacro:ipa_demo_env
+    prefix=""
+    use_fake_hardware="$(arg use_fake_hardware)" />
   <joint name="demo_env_joint" type="fixed">
     <parent link="world" />
     <child link="env_link" />
@@ -103,6 +105,5 @@
                  ${flange_welding_gun['pitch']}
                  ${flange_welding_gun['yaw']}"/>
   </joint>
-
 
 </robot>

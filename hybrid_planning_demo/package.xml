@@ -17,9 +17,10 @@
   <depend>rclcpp</depend>
   <depend>rclcpp_action</depend>
   <depend>rclcpp_components</depend>
+  <depend>pluginlib</depend>
+  <depend>moveit_hybrid_planning</depend>
 
   <exec_depend>moveit_servo</exec_depend>
-  <exec_depend>moveit_hybrid_planning</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 

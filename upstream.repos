@@ -15,7 +15,7 @@ repositories:
   geometric_shapes:
     type: git
     url: https://github.com/ros-planning/geometric_shapes
-    version: ros2
+    version: foxy
   moveit2:
     type: git
     # TODO(henning): switch back to upstream
