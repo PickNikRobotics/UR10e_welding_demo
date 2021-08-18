@@ -6,7 +6,7 @@
   <xacro:arg name="name" default="ipa_ur_demo"/>
 
   <!-- Endeffector name -->
-  <xacro:arg name="endeffector" default="welding_gun_lorch_scancontrol" />
+  <xacro:arg name="endeffector" default="welding_gun_lorch_scancontrol_3000" />
   <!-- <xacro:property name="endeffector" value="$(arg endeffector)" /> -->
 
   <!-- Robot model -->
@@ -97,7 +97,7 @@
   <xacro:endeffector prefix="" />
   <xacro:property name="flange_welding_gun" value="${welding_gun_config['flange_welding_gun']}"/>
   <joint name="welding_gun_joint" type="fixed">
-    <parent link="wrist_3_link" />
+    <parent link="tcp_welding_gun_link" />
     <child link="welding_gun_link" />
     <origin xyz="${flange_welding_gun['x']}
                  ${flange_welding_gun['y']}
