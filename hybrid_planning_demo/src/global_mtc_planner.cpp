@@ -14,6 +14,8 @@
 #include <moveit/task_constructor/solvers/cartesian_path.h>
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 
+#include <processit_tasks/cartesian_task.h>
+
 namespace hybrid_planning_demo
 {
 using namespace std::chrono_literals;

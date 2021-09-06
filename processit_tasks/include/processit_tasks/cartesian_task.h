@@ -11,8 +11,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rosparam_shortcuts/rosparam_shortcuts.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-// #include <tf2_ros/transform_listener.h>
-// #include <ros/package.h>
 #include <geometry_msgs/msg/pose.h>
 #include <geometry_msgs/msg/transform.h>
 
@@ -24,7 +22,7 @@
 // MTC
 #include <moveit/task_constructor/task.h>
 #include <moveit/task_constructor/stages/current_state.h>
-#include <moveit/task_constructor/solvers/cartesian_path.h>
+#include <moveit/task_constructor/stages/move_to.h>
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 #include <moveit_task_constructor_msgs/action/execute_task_solution.hpp>
 
@@ -37,6 +35,7 @@ class CartesianTask
 public:
   // Constructor
   CartesianTask(rclcpp::Node::SharedPtr& node);
+
   // Destructor
   ~CartesianTask() = default;
 
@@ -47,9 +46,8 @@ public:
   void addCurrentState();
 
   // Adding a new stage
-  void addStage(std::string stage_caption, std::string manufacturingSubFrameID, std::string planner_id, double velocity);
-  void addStage(std::string stage_caption, std::string manufacturingSubFrameID, std::string manufacturingToTaskFrameID,
-                geometry_msgs::msg::Transform stage_offset, std::string planner_id, double velocity);
+  void addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose, std::string planner_id,
+                double velocity);
 
   // Setting a stage offset
   void setTaskTransformOffset(double x, double y, double z, double roll, double pitch, double yaw);
@@ -60,6 +58,8 @@ public:
 
   // Execution of the motion
   bool execute();
+
+  moveit::task_constructor::TaskPtr task_;
 
 private:
   /*************
@@ -72,17 +72,19 @@ private:
   // Apply the prevoiusly set offset to the task transform
   void applyTaskTransformOffset();
 
+  void setPlannerProperties(std::shared_ptr<moveit::task_constructor::solvers::PipelinePlanner>& pipeline_planner,
+                            std::string planner_id, double velocity);
+
   /*******
    * ROS *
    *******/
 
-  rclcpp::Node::SharedPtr& node_;
+  rclcpp::Node::SharedPtr node_;
 
   /**************************
    * task-related variables *
    **************************/
 
-  moveit::task_constructor::TaskPtr task_;
   std::string task_name_;
   std::string task_caption_;
   int task_id_;
@@ -125,10 +127,10 @@ private:
 
   // Step size
   double step_size_ = 0.01;
-  int num_planning_attempts_;          //.01
-  double goal_joint_tolerance_;        //.01
-  double goal_position_tolerance_;     //.01
-  double goal_orientation_tolerance_;  //.01
+  int num_planning_attempts_;                 //.01
+  double goal_joint_tolerance_ = 1e-4;        //.01
+  double goal_position_tolerance_ = 1e-4;     //.01
+  double goal_orientation_tolerance_ = 1e-3;  //.01
 
   // Planner IDs
   std::string linear_planner_id_ = "LIN";
@@ -140,15 +142,15 @@ private:
   std::string planner_id_property_name_ = "planner";
   std::string path_constraints_name_ = "linear_system_constraints";  // OMPL Constrained with linear equations system
 
-  // Allowed planning time [s] and maximum numer of solutions
+  // Allowed planning time [s] and maximum number of solutions
   int planning_time_free_space_ = 1;
   int planning_time_constrained_ = 5;
   int planning_time_collisions_ = 10;
   int max_solutions_ = 10;
 
   // // Planning group and link names
-  std::string arm_group_name_;
-  std::string moveit_ee_name_;
+  std::string arm_group_name_;      //"manipulator"
+  std::string moveit_ee_name_;      //"endeffector" //"flange"
   std::string welding_group_name_;  //"welding_endeffector" // "welding_arm"
   std::string welding_tcp_frame_;   //"welding_gun" // "welding_tcp"
 

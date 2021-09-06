@@ -253,7 +253,7 @@ int main(int argc, char** argv)
 
   HybridPlanningDemo demo(node);
   std::thread run_demo([&demo]() {
-    rclcpp::sleep_for(5s);
+    rclcpp::sleep_for(3s);
     demo.run();
   });
 

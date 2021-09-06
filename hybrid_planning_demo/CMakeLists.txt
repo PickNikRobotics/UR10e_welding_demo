@@ -5,6 +5,7 @@ find_package(ament_cmake REQUIRED)
 find_package(moveit_hybrid_planning REQUIRED)
 find_package(moveit_servo REQUIRED)
 find_package(moveit_task_constructor_core REQUIRED)
+find_package(processit_tasks REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -15,6 +16,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   moveit_servo
   moveit_task_constructor_core
   pluginlib
+  processit_tasks
   rclcpp
   rclcpp_action
   rclcpp_components

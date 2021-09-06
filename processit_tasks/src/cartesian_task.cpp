@@ -1,5 +1,5 @@
-// MTC Welding IPA
-#include "processit_tasks/cartesian_task.h"
+#include <processit_tasks/cartesian_task.h>
+#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace processit_tasks
 {
@@ -29,10 +29,6 @@ void CartesianTask::loadParameters()
   // Optional parameters (default value exists => no shutdown required if loading fails)
   size_t warnings = 0;
   warnings += rosparam_shortcuts::get(node_, "max_acceleration_scaling", max_acceleration_scaling_);
-  warnings += rosparam_shortcuts::get(node_, "via_max_joint_velocity", via_max_joint_velocity_);
-  warnings += rosparam_shortcuts::get(node_, "away_max_joint_velocity", away_max_joint_velocity_);
-  warnings += rosparam_shortcuts::get(node_, "via_velocity", via_velocity_);
-  warnings += rosparam_shortcuts::get(node_, "cartesian_velocity", cartesian_velocity_);
   warnings += rosparam_shortcuts::get(node_, "cartesian_rot_velocity", cartesian_rot_velocity_);
   warnings += rosparam_shortcuts::get(node_, "step_size", step_size_);
   warnings += rosparam_shortcuts::get(node_, "num_planning_attempts", num_planning_attempts_);
@@ -53,9 +49,9 @@ void CartesianTask::init(std::string task_name, std::string task_caption)
   task_caption_ = task_caption;
 
   loadParameters();
-  rosparam_shortcuts::get(node_, "/move_group/planning_plugin", planner_plugin_);
-  rosparam_shortcuts::get(node_, "/robot_description_planning/cartesian_limits/max_trans_vel", max_trans_vel_);
-  rosparam_shortcuts::get(node_, "/robot_description_planning/cartesian_limits/max_rot_vel", max_rot_vel_);
+  rosparam_shortcuts::get(node_, "move_group.planning_plugin", planner_plugin_);
+  rosparam_shortcuts::get(node_, "robot_description_planning.cartesian_limits.max_trans_vel", max_trans_vel_);
+  rosparam_shortcuts::get(node_, "robot_description_planning.cartesian_limits.max_rot_vel", max_rot_vel_);
 
   RCLCPP_INFO(LOGGER, "Initializing task pipeline");
 
@@ -64,7 +60,7 @@ void CartesianTask::init(std::string task_name, std::string task_caption)
 
   Task& t = *task_;
   t.stages()->setName(task_caption + task_name);
-  t.loadRobotModel();
+  t.loadRobotModel(node_);
 
   // Set task properties
   // t.setProperty("arm", arm_group_name_);
@@ -89,11 +85,8 @@ void CartesianTask::init(std::string task_name, std::string task_caption)
 void CartesianTask::addCurrentState()
 {
   Task& t = *task_;
-  auto scene = std::make_shared<planning_scene::PlanningScene>(t.getRobotModel());
-  {
-    auto current = std::make_unique<stages::CurrentState>("Current state");
-    t.add(std::move(current));
-  }
+  auto current_state = std::make_unique<stages::CurrentState>("Current state");
+  t.add(std::move(current_state));
 }
 
 void CartesianTask::applyTaskTransformOffset()
@@ -128,24 +121,16 @@ void CartesianTask::setTaskTransformOffset(geometry_msgs::msg::Transform new_tas
   task_transform_ = new_task_transform;
 }
 
-/**
- * @brief Adds a new stage to the task. Offset is defined through task_transform_.
- *
- * @param stage_caption How the stage is named
- * @param manufacturingSubFrameID The header.frame_id of the frame to reach in this stage
- * @param planner_id The ID of the planner, e.g. "LIN"/"CIRC"/...
- * @param velocity The velocity which the robot should have
- */
-void CartesianTask::addStage(std::string stage_caption, std::string manufacturingSubFrameID, std::string planner_id,
-                             double velocity)
+void CartesianTask::setPlannerProperties(
+    std::shared_ptr<moveit::task_constructor::solvers::PipelinePlanner>& pipeline_planner, std::string planner_id,
+    double velocity)
 {
-  // Create an instance of the planner and set the parameters for it
-  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>();
-  pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
+  RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: setPlannerProperties");
   pipeline_planner->setProperty("step_size", step_size_);
   // pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
   if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
   {
+    pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
     pipeline_planner->setPlannerId(planner_id);
     if (planner_id == joint_space_planner_id_)
     {
@@ -164,8 +149,6 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
       {
         /// desired_trans_cartesian_velocity = max_trans_vel_
         trans_velocity_scaling_factor = 1;
-        RCLCPP_ERROR_STREAM(LOGGER, "The desired Cartesian translational velocity is above Pilz Maximum, setting "
-                                    "translation scaling factor to 1");
       }
       else
         /// desired_trans_cartesian_velocity = max_velocity_scaling_factor * max_trans_vel_
@@ -175,8 +158,6 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
       {
         /// desired_rot_cartesian_velocity = max_rot_vel_
         rot_velocity_scaling_factor = 1;
-        RCLCPP_ERROR_STREAM(LOGGER, "The desired Cartesian rotational velocity is above Pilz Maximum, setting rotation "
-                                    "scaling factor to 1");
       }
       else
         /// desired_rot_cartesian_velocity = max_velocity_scaling_factor * max_rot_vel_
@@ -185,14 +166,10 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
       if (trans_velocity_scaling_factor > rot_velocity_scaling_factor)
       {
         pipeline_planner->setProperty("max_velocity_scaling_factor", rot_velocity_scaling_factor);
-        RCLCPP_INFO_STREAM(LOGGER, "Setting scaling factor to fullfill desired/max Cartesian rotational velocity: "
-                                       << rot_velocity_scaling_factor);
       }
       else
       {
         pipeline_planner->setProperty("max_velocity_scaling_factor", trans_velocity_scaling_factor);
-        RCLCPP_INFO_STREAM(LOGGER, "Setting scaling factor to fullfill desired/max Cartesian translational velocity: "
-                                       << trans_velocity_scaling_factor);
       }
     }
   }
@@ -201,6 +178,7 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
     if (planner_id == joint_space_planner_id_)
     {
       pipeline_planner->setPlannerId(free_space_planner_id_);
+      pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
       pipeline_planner->setProperty("max_velocity_scaling_factor", velocity);  // max_joint_velocity
     }
     else
@@ -208,46 +186,14 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
       pipeline_planner->setProperty("goal_orientation_tolerance", goal_orientation_tolerance_);
       pipeline_planner->setPlannerId(constrained_planner_id_);
       pipeline_planner->setProperty("max_cartesian_speed", velocity);  // cartesian_velocity
-      pipeline_planner->setProperty("cartesian_speed_end_effector_link", welding_tcp_frame_);
-      RCLCPP_INFO_STREAM(LOGGER, "Setting max " << welding_tcp_frame_
-                                                << " speed to fullfill desired Cartesian translational velocity [m/s]: "
-                                                << velocity);
+      pipeline_planner->setProperty("cartesian_speed_limited_link", welding_tcp_frame_);
     }
     // pipeline_planner->setProperty(planner_id_property_name_, constrained_planner_id_);
   }
   else
+  {
     RCLCPP_ERROR_STREAM(LOGGER, "Planner plugin name not correctly set: " << planner_plugin_);
-
-  // Create a stage and include the planner in it
-  auto stage = std::make_unique<stages::MoveToTaskFrame>(stage_caption, pipeline_planner);
-  stage->setGroup(welding_group_name_);
-  stage->setTaskEnd(manufacturingSubFrameID, task_transform_);
-  if (planner_id == linear_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
-  {
-    stage->setTaskStart(manufacturingSubFrameID, task_transform_);
-    moveit_msgs::msg::Constraints path_constraints = stage->setLinConstraints();
-    stage->setPathConstraints(path_constraints);
   }
-  else if (planner_id == circular_planner_id_)
-  {
-    stage->setTaskStart(manufacturingSubFrameID, task_transform_);
-    stage->setTaskInterim(manufacturingSubFrameID, task_transform_);
-    moveit_msgs::msg::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
-    stage->setPathConstraints(path_constraints);
-  }
-  else if (planner_id == curve_planner_id_)
-  {
-    // stage->setSplineConstraints(manufacturingSubFrameID, task_transform_);
-  }
-
-  if (planner_id != joint_space_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
-    stage->setTimeout(planning_time_constrained_);
-  else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
-    stage->setTimeout(planning_time_free_space_);
-
-  // Add the stage to the task
-  Task& t = *task_;
-  t.add(std::move(stage));
 }
 
 /**
@@ -261,105 +207,31 @@ void CartesianTask::addStage(std::string stage_caption, std::string manufacturin
  * @param planner_id The ID of the planner, e.g. "LIN"/"CIRC"/...
  * @param velocity The velocity which the robot should have
  */
-void CartesianTask::addStage(std::string stage_caption, std::string manufacturingSubFrameID,
-                             std::string manufacturingToTaskFrameID, geometry_msgs::msg::Transform stage_offset,
+void CartesianTask::addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose,
                              std::string planner_id, double velocity)
 {
-  // Create an instance of the planner and set the parameters for it
-  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>();
-  pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
-  pipeline_planner->setProperty("step_size", step_size_);
-  // pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
-  if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
-  {
-    pipeline_planner->setPlannerId(planner_id);
-    if (planner_id == joint_space_planner_id_)
-    {
-      if (velocity > 0)
-      {
-        pipeline_planner->setProperty("max_velocity_scaling_factor", velocity);
-        RCLCPP_INFO_STREAM(LOGGER, "Setting desired Maximum Joint velocity scaling factor: " << velocity);
-      }
-    }
-    else
-    {
-      double trans_velocity_scaling_factor;
-      double rot_velocity_scaling_factor;
+  RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: Add stage stage_offset");
+  // Create an instance of the planner and set its properties
+  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_);
+  setPlannerProperties(pipeline_planner, planner_id, velocity);
 
-      if (velocity >= max_trans_vel_)
-      {
-        /// desired_trans_cartesian_velocity = max_trans_vel_
-        trans_velocity_scaling_factor = 1;
-        RCLCPP_ERROR_STREAM(LOGGER, "The desired Cartesian translational velocity is above Pilz Maximum, setting "
-                                    "translation scaling factor to 1");
-      }
-      else
-        /// desired_trans_cartesian_velocity = max_velocity_scaling_factor * max_trans_vel_
-        trans_velocity_scaling_factor = velocity / max_trans_vel_;
-
-      if (cartesian_rot_velocity_ >= max_rot_vel_)
-      {
-        /// desired_rot_cartesian_velocity = max_rot_vel_
-        rot_velocity_scaling_factor = 1;
-        RCLCPP_ERROR_STREAM(LOGGER, "The desired Cartesian rotational velocity is above Pilz Maximum, setting rotation "
-                                    "scaling factor to 1");
-      }
-      else
-        /// desired_rot_cartesian_velocity = max_velocity_scaling_factor * max_rot_vel_
-        rot_velocity_scaling_factor = cartesian_rot_velocity_ / max_rot_vel_;
-
-      if (trans_velocity_scaling_factor > rot_velocity_scaling_factor)
-      {
-        pipeline_planner->setProperty("max_velocity_scaling_factor", rot_velocity_scaling_factor);
-        RCLCPP_INFO_STREAM(LOGGER, "Setting scaling factor to fullfill desired/max Cartesian rotational velocity: "
-                                       << rot_velocity_scaling_factor);
-      }
-      else
-      {
-        pipeline_planner->setProperty("max_velocity_scaling_factor", trans_velocity_scaling_factor);
-        RCLCPP_INFO_STREAM(LOGGER, "Setting scaling factor to fullfill desired/max Cartesian translational velocity: "
-                                       << trans_velocity_scaling_factor);
-      }
-    }
-  }
-  else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
-  {
-    if (planner_id == joint_space_planner_id_)
-    {
-      pipeline_planner->setPlannerId(free_space_planner_id_);
-      pipeline_planner->setProperty("max_velocity_scaling_factor", velocity);  // max_joint_velocity
-    }
-    else
-    {
-      pipeline_planner->setProperty("goal_orientation_tolerance", goal_orientation_tolerance_);
-      pipeline_planner->setPlannerId(constrained_planner_id_);
-      pipeline_planner->setProperty("max_cartesian_speed", velocity);  // cartesian_velocity
-      pipeline_planner->setProperty("cartesian_speed_end_effector_link", welding_tcp_frame_);
-      RCLCPP_INFO_STREAM(LOGGER, "Setting max " << welding_tcp_frame_
-                                                << " speed to fullfill desired Cartesian translational velocity [m/s]: "
-                                                << velocity);
-    }
-    // pipeline_planner->setProperty(planner_id_property_name_, constrained_planner_id_);
-  }
-  else
-    RCLCPP_ERROR_STREAM(LOGGER, "Planner plugin name not correctly set: " << planner_plugin_);
-
-  // Create a stage and include the planner in it
-  auto stage = std::make_unique<stages::MoveToTaskFrame>(stage_caption, pipeline_planner);
+  // Create a stage with desired planner
+  auto stage = std::make_unique<stages::MoveTo>(stage_caption, pipeline_planner);
   stage->setGroup(welding_group_name_);
-  stage->setTaskEnd(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
+  stage->setGoal(goal_pose);
+  // stage->setTaskEnd(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
   if (planner_id == linear_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
   {
-    stage->setTaskStart(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
-    moveit_msgs::msg::Constraints path_constraints = stage->setLinConstraints();
-    stage->setPathConstraints(path_constraints);
+    // stage->setTaskStart(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
+    // moveit_msgs::msg::Constraints path_constraints = stage->setLinConstraints();
+    // stage->setPathConstraints(path_constraints);
   }
   else if (planner_id == circular_planner_id_)
   {
-    stage->setTaskStart(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
-    stage->setTaskInterim(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
-    moveit_msgs::msg::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
-    stage->setPathConstraints(path_constraints);
+    // stage->setTaskStart(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
+    // stage->setTaskInterim(manufacturingSubFrameID, manufacturingToTaskFrameID, stage_offset);
+    // moveit_msgs::msg::Constraints path_constraints = stage->setCircConstraints(planner_plugin_);
+    // stage->setPathConstraints(path_constraints);
   }
   else if (planner_id == curve_planner_id_)
   {
@@ -387,12 +259,12 @@ bool CartesianTask::plan()
   }
   catch (InitStageException& e)
   {
-    RCLCPP_ERROR_STREAM(LOGGER, "Initialization failed: " << e);
+    RCLCPP_ERROR_STREAM(LOGGER, "Initialization failed");
     return false;
   }
   if (task_->numSolutions() == 0)
   {
-    RCLCPP_ERROR(LOGGER, "Planning failed, no solutions found");
+    RCLCPP_ERROR_STREAM(LOGGER, "Planning failed, no solutions found");
     return false;
   }
   return true;
@@ -401,18 +273,18 @@ bool CartesianTask::plan()
 bool CartesianTask::execute()
 {
   RCLCPP_INFO(LOGGER, "Executing solution trajectory");
-  moveit_task_constructor_msgs::action::ExecuteTaskSolutionGoal execute_goal;
+  moveit_task_constructor_msgs::action::ExecuteTaskSolution::Goal execute_goal;
   task_->solutions().front()->fillMessage(execute_goal.solution);
-  execute_->sendGoal(execute_goal);
-  execute_->waitForResult();
-  moveit_msgs::msg::MoveItErrorCodes execute_result = execute_->getResult()->error_code;
+  auto execute_future = execute_->async_send_goal(execute_goal);
+  execute_future.wait();
 
-  if (execute_result->val != moveit_msg::msgs::MoveItErrorCodes::SUCCESS)
+  if (execute_future.get()->get_status() != rclcpp_action::GoalStatus::STATUS_SUCCEEDED)
   {
-    RCLCPP_ERROR_STREAM(LOGGER, "Task execution failed and returned: " << execute_->getState().toString());
+    RCLCPP_ERROR_STREAM(LOGGER, "Task execution failed");
     return false;
   }
 
   return true;
 }
+
 }  // namespace processit_tasks
