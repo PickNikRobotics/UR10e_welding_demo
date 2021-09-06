@@ -56,7 +56,7 @@ public:
     workpiece_pose.translation().y() = -0.2;
     workpiece_pose.translation().z() = 0.71;
     std::string stl_file = "file://" + workpiece_path + ".STL";
-    RCLCPP_INFO(LOGGER, "Loading mesh " + stl_file);
+    RCLCPP_INFO(LOGGER, "Loading mesh '%s'", stl_file.c_str());
     visual_tools_->publishCollisionMesh(visual_tools_->convertPose(workpiece_pose), "Workpiece", stl_file,
                                         rviz_visual_tools::Colors::GREEN);
     rclcpp::sleep_for(std::chrono::milliseconds(1000));
@@ -70,7 +70,7 @@ public:
 
     // Set task description filename
     std::string task_file = workpiece_path + ".xml";
-    RCLCPP_INFO(LOGGER, "Loading task " + task_file);
+    RCLCPP_INFO(LOGGER, "Loading task '%s'", task_file.c_str());
     request->task_description_file = task_file;
 
     // Set workpiece pose (task description is relative to workpiece frame)
@@ -92,8 +92,7 @@ public:
     {
       for (auto const& pose : weld_seam.poses)
       {
-        RCLCPP_INFO(LOGGER, "Weld seam position " + std::to_string(pose.position.x) + "  " +
-                                std::to_string(pose.position.y) + +"  " + std::to_string(pose.position.z));
+        RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
       }
     }
 

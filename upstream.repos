@@ -11,7 +11,7 @@ repositories:
   control_msgs:
     type: git
     url: https://github.com/ros-controls/control_msgs.git
-    version: foxy-devel
+    version: galactic-devel
   geometric_shapes:
     type: git
     url: https://github.com/ros-planning/geometric_shapes
