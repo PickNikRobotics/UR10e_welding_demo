@@ -180,12 +180,12 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
 
     msg->twist.linear.x = diff_pose.translation().x() * vel_scale;
     msg->twist.linear.y = diff_pose.translation().y() * vel_scale;
-    msg->twist.linear.z = diff_pose.translation().z() * vel_scale;
+    msg->twist.linear.z = diff_pose.translation().z() * vel_scale - laser_correction_;
     msg->twist.angular.x = axis_angle.axis().x() * axis_angle.angle() * vel_scale;
     msg->twist.angular.y = axis_angle.axis().y() * axis_angle.angle() * vel_scale;
 
     // Rotation joint is laser correction, not from delta-position
-    msg->twist.angular.z = laser_correction_;
+    msg->twist.angular.z = 0;  // laser_correction_;
   }
 
   twist_cmd_pub_->publish(std::move(msg));
