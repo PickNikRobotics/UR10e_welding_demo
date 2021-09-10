@@ -9,7 +9,7 @@
 // ROS
 #include <visualization_msgs/msg/marker.h>
 #include <tf2/convert.h>
-#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 namespace processit_cax
 {
@@ -96,6 +96,9 @@ void PluginTaskDescription::loadTaskDescription(
 
   // Scaling the translation (given in [mm], should be in [m]
   double unit_scaling = 0.001;
+  workpiece_pose.translation().x() = 1 / unit_scaling * workpiece_pose.translation().x();
+  workpiece_pose.translation().y() = 1 / unit_scaling * workpiece_pose.translation().y();
+  workpiece_pose.translation().z() = 1 / unit_scaling * workpiece_pose.translation().z();
 
   RCLCPP_INFO_STREAM(LOGGER, "Found " << tasklist.GetNumberOfWeldTasks() << " seams.");
 
@@ -119,6 +122,10 @@ void PluginTaskDescription::loadTaskDescription(
         Eigen::Matrix4d manufacturingFrameStart = tasklist.GetManufacturingCoordinateSystem(i, task_length);
         Eigen::Matrix4d manufacturingFrameEnd =
             tasklist.GetManufacturingCoordinateSystem(i, task_length + segment_length);
+
+        // Transform to world frame
+        manufacturingFrameStart = workpiece_pose.matrix() * manufacturingFrameStart;
+        manufacturingFrameEnd = workpiece_pose.matrix() * manufacturingFrameEnd;
 
         // Rotation of the point
         Eigen::Matrix3d rot_mat = manufacturingFrameStart.block<3, 3>(0, 0);
