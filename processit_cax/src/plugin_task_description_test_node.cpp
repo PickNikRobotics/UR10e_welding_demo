@@ -13,8 +13,9 @@
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <processit_msgs/srv/load_task_description.hpp>
+#include <processit_msgs/srv/add_pose_marker.hpp>
 #include <tf2/convert.h>
-#include <tf2_eigen/tf2_eigen.h>
+#include <tf2_eigen/tf2_eigen.hpp>
 
 // tmp
 #include <ament_index_cpp/get_package_share_directory.hpp>
@@ -28,6 +29,53 @@ public:
   PluginTaskDescriptionTestNode(const rclcpp::Node::SharedPtr& node)
   {
     node_ = node;
+    addintmarker_client = node_->create_client<processit_msgs::srv::AddPoseMarker>("pose_marker/add_pose_marker");
+  }
+
+  std::string addPoseMarker(geometry_msgs::msg::Pose pose)
+  {
+    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
+    request->pose = pose;
+    request->frame_id = "world";
+    request->add_controls = false;
+    request->scale = 0.1;
+    request->marker_type = 2;
+    request->marker_name = "pose_marker_";
+
+    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
+    auto result = addintmarker_client->async_send_request(request);
+    response = result.get();
+    return response->int_marker_id;
+  }
+
+  std::string addLineMarker(int id, double length, geometry_msgs::msg::Pose pose)
+  {
+    // Add Pose Marker add start and end point
+    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
+    request->pose = pose;
+    request->frame_id = "world";
+    request->add_controls = false;
+    request->scale = length;
+    request->marker_type = 3;
+    request->marker_name = "seam_marker_";
+
+    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
+    auto result = addintmarker_client->async_send_request(request);
+    response = result.get();
+    return response->int_marker_id;
+  }
+
+  geometry_msgs::msg::Pose getPose(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
+  {
+    geometry_msgs::msg::Pose pose;
+    pose.position.x = positionVector[0];
+    pose.position.y = positionVector[1];
+    pose.position.z = positionVector[2];
+    pose.orientation.x = q.x();
+    pose.orientation.y = q.y();
+    pose.orientation.z = q.z();
+    pose.orientation.w = q.w();
+    return pose;
   }
 
   void run()
@@ -40,30 +88,33 @@ public:
     node_->get_parameter("workpiece_path", workpiece_path);
 
     // ******************* Step 1 load workpiece
-    // Initialize and setup moveit visual tools
-    moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
-    visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(node_, "world", "/planning_scene"));
-    visual_tools_->loadPlanningSceneMonitor();
-    visual_tools_->loadMarkerPub(true);
-    visual_tools_->setManualSceneUpdating();
-    visual_tools_->deleteAllMarkers();
-    visual_tools_->removeAllCollisionObjects();
-    visual_tools_->triggerPlanningSceneUpdate();
+    // // Initialize and setup moveit visual tools
+    // moveit_visual_tools::MoveItVisualToolsPtr visual_tools_;
+    // visual_tools_.reset(new moveit_visual_tools::MoveItVisualTools(node_, "world", "/planning_scene"));
+    // visual_tools_->loadPlanningSceneMonitor();
+    // visual_tools_->loadMarkerPub(true);
+    // visual_tools_->setManualSceneUpdating();
+    // visual_tools_->deleteAllMarkers();
+    // visual_tools_->removeAllCollisionObjects();
+    // visual_tools_->triggerPlanningSceneUpdate();
 
     // TODO currently only hardcoded pose
     Eigen::Isometry3d workpiece_pose = Eigen::Isometry3d::Identity();
     workpiece_pose.translation().x() = 0.1;
     workpiece_pose.translation().y() = -0.2;
     workpiece_pose.translation().z() = 0.71;
-    std::string stl_file = "file://" + workpiece_path + ".STL";
-    RCLCPP_INFO(LOGGER, "Loading mesh '%s'", stl_file.c_str());
-    visual_tools_->publishCollisionMesh(visual_tools_->convertPose(workpiece_pose), "Workpiece", stl_file,
-                                        rviz_visual_tools::Colors::GREEN);
-    rclcpp::sleep_for(std::chrono::milliseconds(1000));
-    visual_tools_->triggerPlanningSceneUpdate();
+    // Eigen::Quaternion<double>  q(0, 0, 1, 0);
+    // workpiece_pose = workpiece_pose.rotate(q);
+
+    // std::string stl_file = "file://" + workpiece_path + ".STL";
+    // RCLCPP_INFO(LOGGER, "Loading mesh '%s'", stl_file.c_str());
+    // visual_tools_->publishCollisionMesh(visual_tools_->convertPose(workpiece_pose), "Workpiece", stl_file,
+    //                                     rviz_visual_tools::Colors::GREEN);
+    // rclcpp::sleep_for(std::chrono::milliseconds(1000));
+    // visual_tools_->triggerPlanningSceneUpdate();
 
     // ******************* Step 2 load task description
-    // Service call to load a task description
+    // Service call to load a task description and visualize them in RViz
     rclcpp::Client<processit_msgs::srv::LoadTaskDescription>::SharedPtr client =
         node_->create_client<processit_msgs::srv::LoadTaskDescription>("plugin_task_description/load_task_description");
     auto request = std::make_shared<processit_msgs::srv::LoadTaskDescription::Request>();
@@ -93,6 +144,7 @@ public:
       for (auto const& pose : weld_seam.poses)
       {
         RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
+        addPoseMarker(pose);
       }
     }
 
@@ -101,6 +153,7 @@ public:
 
 private:
   rclcpp::Node::SharedPtr node_;
+  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedPtr addintmarker_client;
 };
 
 int main(int argc, char** argv)
@@ -112,7 +165,7 @@ int main(int argc, char** argv)
 
   PluginTaskDescriptionTestNode plugin_task_description_test_node(node);
   std::thread run_plugin_task_description_test([&plugin_task_description_test_node]() {
-    rclcpp::sleep_for(5s);
+    rclcpp::sleep_for(10s);
     // Get parameter containing task description file name and run test node
     plugin_task_description_test_node.run();
   });

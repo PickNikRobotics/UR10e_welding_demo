@@ -12,6 +12,8 @@ set(msg_files
   "msg/WeldSeam.msg"
 )
 set(srv_files
+  "srv/AddPoseMarker.srv"
+  "srv/EditPoseMarker.srv"
   "srv/LoadTaskDescription.srv"
 )
 rosidl_generate_interfaces(${PROJECT_NAME}

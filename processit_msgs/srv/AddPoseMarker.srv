@@ -1,0 +1,8 @@
+geometry_msgs/Pose pose
+string frame_id
+bool add_controls
+float64 scale
+uint32 marker_type
+string marker_name
+---
+string int_marker_id

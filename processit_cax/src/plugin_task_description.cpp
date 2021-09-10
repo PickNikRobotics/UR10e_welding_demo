@@ -38,6 +38,7 @@ void PluginTaskDescription::initializeServices()
   RCLCPP_INFO(LOGGER, "Create service to load task description ");
   load_task_description_service = nh_->create_service<processit_msgs::srv::LoadTaskDescription>(
       "~/load_task_description", std::bind(&PluginTaskDescription::loadTaskDescription, this, _1, _2));
+  addintmarker_client = nh_->create_client<processit_msgs::srv::AddPoseMarker>("pose_marker/add_pose_marker");
 }
 
 void PluginTaskDescription::initializePublishers()
@@ -51,6 +52,98 @@ void PluginTaskDescription::initializeSubscribers()
 //----------------------------------------------------------------------
 // LOADING TASK DESCRIPTION PLUGIN
 //----------------------------------------------------------------------
+
+/**
+ * @brief Set an pose marker at the start and end position of the weld seam
+ *
+ * @param pose geometry_msgs/Pose the pose
+ *
+ * @return std::string the pose marker id
+ */
+std::string PluginTaskDescription::addPoseMarker(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
+{
+  // Create pose (assuming mm convention)
+  geometry_msgs::msg::Pose pose = getPose(positionVector, q);
+
+  auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
+  request->pose = pose;
+  request->frame_id = "world";
+  request->add_controls = false;
+  request->scale = 0.1;
+  request->marker_type = 2;
+  request->marker_name = "pose_marker_";
+  auto result = addintmarker_client->async_send_request(request);
+  return result.get()->int_marker_id;
+
+  // using ServiceResponseFuture =
+  //   rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFuture;
+  // auto response_received_callback = [this](ServiceResponseFuture future) {
+  //     auto result = future.get();
+  //     RCLCPP_INFO_STREAM(LOGGER, "Got result");
+  //     return future.get()->int_marker_id;
+  //   };
+  // auto future_result = addintmarker_client->async_send_request(request, response_received_callback);
+
+  // auto result = addintmarker_client->async_send_request(request);
+  // if (rclcpp::spin_until_future_complete(nh_, result) ==
+  //   rclcpp::FutureReturnCode::SUCCESS)
+  // {
+  //   return result.get()->int_marker_id;
+  // } else {
+  //   RCLCPP_ERROR(LOGGER, "Failed to call service add_two_ints");
+  //   return "";
+  // }
+}
+
+/**
+ * @brief Add a line representing the weld seam
+ *
+ * At the moment, the line is represented by a cylindric marker.
+ * Its position is located in the middle between start and end point.
+ * Its orientation is needed to point in direction of the seam.
+ *
+ * @param id integer
+ * @param length double
+ * @param positionVectorStart  an Eigen:Vector3d, in mm convention
+ * @param q the quaternion of the manufacturingFrame in the start pose
+ */
+std::string PluginTaskDescription::addLineMarker(int id, double length, Eigen::Vector3d& positionVectorCenter,
+                                                 Eigen::Quaternion<double>& q)
+{
+  // Create pose (assuming mm convention)
+  geometry_msgs::msg::Pose pose = getPose(positionVectorCenter, q);
+
+  // Add Pose Marker add start and end point
+  auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
+  request->pose = pose;
+  request->frame_id = "world";
+  request->add_controls = false;
+  request->scale = length;
+  request->marker_type = 3;
+  request->marker_name = "seam_marker_";
+  auto result = addintmarker_client->async_send_request(request);
+  return result.get()->int_marker_id;
+
+  // using ServiceResponseFuture =
+  //   rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFuture;
+  // auto response_received_callback = [this](ServiceResponseFuture future) {
+  //     // auto result = future.get();
+  //     // RCLCPP_INFO_STREAM(LOGGER, "Got result line");
+  //     // return future.get()->int_marker_id;
+  //     return "";
+  //   };
+  // auto future_result = addintmarker_client->async_send_request(request, response_received_callback);
+
+  // auto result = addintmarker_client->async_send_request(request);
+  // if (rclcpp::spin_until_future_complete(nh_, result) ==
+  //   rclcpp::FutureReturnCode::SUCCESS)
+  // {
+  //   return result.get()->int_marker_id;
+  // } else {
+  //   RCLCPP_ERROR(LOGGER, "Failed to call service add_two_ints");
+  //   return "";
+  // }
+}
 
 /**
  * @brief Convert an Eigen position vector and a corresponding rotation to a geometry_msgs::msg::Pose
@@ -120,6 +213,8 @@ void PluginTaskDescription::loadTaskDescription(
 
         // Get Manufacturing Coordinate system for start and end point and rotation
         Eigen::Matrix4d manufacturingFrameStart = tasklist.GetManufacturingCoordinateSystem(i, task_length);
+        Eigen::Matrix4d manufacturingFrameCenter =
+            tasklist.GetManufacturingCoordinateSystem(i, task_length + segment_length / 2);
         Eigen::Matrix4d manufacturingFrameEnd =
             tasklist.GetManufacturingCoordinateSystem(i, task_length + segment_length);
 
@@ -134,18 +229,21 @@ void PluginTaskDescription::loadTaskDescription(
         // Translation (given in mm in the task description)
         // Scaling the position that should be in [m]
         Eigen::Vector3d positionVectorStart = unit_scaling * manufacturingFrameStart.col(3).head(3);
+        Eigen::Vector3d positionVectorCenter = unit_scaling * manufacturingFrameCenter.col(3).head(3);
         Eigen::Vector3d positionVectorEnd = unit_scaling * manufacturingFrameEnd.col(3).head(3);
 
         // TODO Migrate visualization
         // Set start and end pose and get pose marker id;
-        // int_marker_id_start = setPositionVector(positionVectorStart, q);
-        // int_marker_id_end = setPositionVector(positionVectorEnd, q);
+        // int_marker_id_start = addPoseMarker(positionVectorStart, q);
+        // int_marker_id_end = addPoseMarker(positionVectorEnd, q);
 
         // Add a line (cube) connecting both points in direction of y axis (along the seam)
+        // // Add a line (cube) connecting both points
+        // // In direction of y axis (along the seam)
         // double a = M_PI * 0.5;
         // Eigen::Quaternion<double> factor(cos(a / 2), sin(a / 2), 0, 0);
-        // q = q * factor;
-        // int_marker_id_line = addLine(seam_count, unit_scaling * segment_length, positionVectorCenter, q);
+        // Eigen::Quaternion<double> q_line = q * factor;
+        // int_marker_id_line = addLineMarker(seam_count, unit_scaling * segment_length, positionVectorCenter, q_line);
 
         // TODO Transform to workpiece frame
 
@@ -178,6 +276,10 @@ int main(int argc, char** argv)
   rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("plugin_task_description");
 
   processit_cax::PluginTaskDescription plugin_task_description_node(node);
+  // using rclcpp::executors::MultiThreadedExecutor;
+  // MultiThreadedExecutor executor;
+  // executor.add_node(node);
+  // executor.spin();
   rclcpp::spin(node);
   rclcpp::shutdown();
   return 0;

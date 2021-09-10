@@ -10,6 +10,7 @@
 #include <visualization_msgs/msg/interactive_marker_feedback.hpp>
 #include <visualization_msgs/msg/interactive_marker_update.hpp>
 #include <processit_msgs/srv/load_task_description.hpp>
+#include <processit_msgs/srv/add_pose_marker.hpp>
 #include <processit_msgs/msg/weld_seam.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 
@@ -31,13 +32,14 @@ public:
 private:
   rclcpp::Node::SharedPtr nh_;
   rclcpp::Service<processit_msgs::srv::LoadTaskDescription>::SharedPtr load_task_description_service;
+  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedPtr addintmarker_client;
 
   void initializePublishers();
   void initializeServices();
   void initializeSubscribers();
 
-  // std::string setPositionVector(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q);
-  // std::string addLine(int id, double length, Eigen::Vector3d& positionVectorCenter, Eigen::Quaternion<double>& q);
+  std::string addPoseMarker(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q);
+  std::string addLineMarker(int id, double length, Eigen::Vector3d& positionVectorCenter, Eigen::Quaternion<double>& q);
 };
 
 };  // namespace processit_cax
