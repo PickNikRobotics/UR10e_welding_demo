@@ -19,11 +19,8 @@ void CartesianTask::loadParameters()
 
   // Critical parameters (no default exists => shutdown if loading fails)
   size_t critical_errors = 0;
-  critical_errors += rosparam_shortcuts::get(node_, "arm_group_name", arm_group_name_);
-  critical_errors += rosparam_shortcuts::get(node_, "moveit_ee_name", moveit_ee_name_);
   critical_errors += rosparam_shortcuts::get(node_, "welding_group_name", welding_group_name_);
   critical_errors += rosparam_shortcuts::get(node_, "welding_tcp_frame", welding_tcp_frame_);
-
   rosparam_shortcuts::shutdownIfError(critical_errors);
 
   // Optional parameters (default value exists => no shutdown required if loading fails)
@@ -32,7 +29,6 @@ void CartesianTask::loadParameters()
   warnings += rosparam_shortcuts::get(node_, "cartesian_rot_velocity", cartesian_rot_velocity_);
   warnings += rosparam_shortcuts::get(node_, "step_size", step_size_);
   warnings += rosparam_shortcuts::get(node_, "num_planning_attempts", num_planning_attempts_);
-  warnings += rosparam_shortcuts::get(node_, "goal_joint_tolerance", goal_joint_tolerance_);
   warnings += rosparam_shortcuts::get(node_, "goal_position_tolerance", goal_position_tolerance_);
   warnings += rosparam_shortcuts::get(node_, "goal_orientation_tolerance", goal_orientation_tolerance_);
   warnings += rosparam_shortcuts::get(node_, "planning_time_free_space", planning_time_free_space_);
@@ -63,20 +59,9 @@ void CartesianTask::init(std::string task_name, std::string task_caption)
   t.loadRobotModel(node_);
 
   // Set task properties
-  // t.setProperty("arm", arm_group_name_);
-  // t.setProperty("eef", moveit_ee_name_);
   // t.setProperty("welding", welding_group_name_);
   // t.setProperty("welding_tcp_frame", welding_tcp_frame_);
   // t.setProperty("ik_frame", welding_tcp_frame_);
-
-  // Set task transform
-  task_transform_.translation.x = task_transform_x_;
-  task_transform_.translation.y = task_transform_y_;
-  task_transform_.translation.z = task_transform_z_;
-  tf2::Quaternion task_rotation_tf;
-  task_rotation_tf.setEuler(task_transform_roll_, task_transform_pitch_, task_transform_yaw_);
-  task_rotation_tf.normalize();
-  tf2::convert(task_rotation_tf, task_transform_.rotation);
 
   // Start from current robot state
   addCurrentState();
@@ -89,45 +74,12 @@ void CartesianTask::addCurrentState()
   t.add(std::move(current_state));
 }
 
-void CartesianTask::applyTaskTransformOffset()
-{
-  task_transform_.translation.x = cartesian_offset_x_;
-  task_transform_.translation.y = cartesian_offset_y_;
-  task_transform_.translation.z = cartesian_offset_z_;
-
-  double roll_angle = cartesian_offset_roll_;
-  double pitch_angle = cartesian_offset_pitch_;
-  double yaw_angle = cartesian_offset_yaw_;
-
-  tf2::Quaternion task_rotation_tf;
-  task_rotation_tf.setEuler(roll_angle, pitch_angle, yaw_angle);
-  task_rotation_tf.normalize();
-  tf2::convert(task_rotation_tf, task_transform_.rotation);
-}
-
-void CartesianTask::setTaskTransformOffset(double x, double y, double z, double roll, double pitch, double yaw)
-{
-  cartesian_offset_x_ = x;
-  cartesian_offset_y_ = y;
-  cartesian_offset_z_ = z;
-  cartesian_offset_roll_ = roll;
-  cartesian_offset_pitch_ = pitch;
-  cartesian_offset_yaw_ = yaw;
-  applyTaskTransformOffset();
-}
-
-void CartesianTask::setTaskTransformOffset(geometry_msgs::msg::Transform new_task_transform)
-{
-  task_transform_ = new_task_transform;
-}
-
 void CartesianTask::setPlannerProperties(
     std::shared_ptr<moveit::task_constructor::solvers::PipelinePlanner>& pipeline_planner, std::string planner_id,
     double velocity)
 {
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: setPlannerProperties");
   pipeline_planner->setProperty("step_size", step_size_);
-  // pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
   if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
   {
     pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
@@ -185,8 +137,9 @@ void CartesianTask::setPlannerProperties(
     {
       pipeline_planner->setProperty("goal_orientation_tolerance", goal_orientation_tolerance_);
       pipeline_planner->setPlannerId(constrained_planner_id_);
-      pipeline_planner->setProperty("max_cartesian_speed", velocity);  // cartesian_velocity
-      pipeline_planner->setProperty("cartesian_speed_limited_link", welding_tcp_frame_);
+      // Requires https://github.com/ros-planning/moveit/pull/2856
+      // pipeline_planner->setProperty("max_cartesian_speed", velocity);  // cartesian_velocity
+      // pipeline_planner->setProperty("cartesian_speed_limited_link", welding_tcp_frame_);
     }
     // pipeline_planner->setProperty(planner_id_property_name_, constrained_planner_id_);
   }

@@ -9,7 +9,7 @@
 // ROS
 #include <visualization_msgs/msg/marker.h>
 #include <tf2/convert.h>
-#include <tf2_eigen/tf2_eigen.hpp>
+#include <tf2_eigen/tf2_eigen.h>
 
 namespace processit_cax
 {

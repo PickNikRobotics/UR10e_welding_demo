@@ -15,7 +15,7 @@
 #include <processit_msgs/srv/load_task_description.hpp>
 #include <processit_msgs/srv/add_pose_marker.hpp>
 #include <tf2/convert.h>
-#include <tf2_eigen/tf2_eigen.hpp>
+#include <tf2_eigen/tf2_eigen.h>
 
 // tmp
 #include <ament_index_cpp/get_package_share_directory.hpp>
