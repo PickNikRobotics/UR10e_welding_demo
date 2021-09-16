@@ -324,6 +324,12 @@ def generate_launch_description():
     ] = """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"""
     ompl_pipeline["start_state_max_bounds_error"] = 0.1
 
+    pilz_industrial_planning_pipeline = {
+        "planning_plugin": "pilz_industrial_motion_planner::CommandPlanner",
+        "request_adapters": "",
+        "start_state_max_bounds_error": 0.1,
+    }
+
     # Trajectory Execution Configuration
     controllers_yaml = load_yaml("ipa_moveit_config", "config/controllers.yaml")
     moveit_controllers = {
@@ -367,6 +373,19 @@ def generate_launch_description():
     servo_yaml = load_yaml("hybrid_planning_demo", "config/servo_solver.yaml")
     servo_params = {"moveit_servo": servo_yaml}
 
+    joint_limits_yaml = {
+        "robot_description_planning": load_yaml(
+            "ipa_demo_cell_description",
+            os.path.join("config", "ur10e", "pilz_joint_limits.yaml"),
+        )
+    }
+    cartesian_limits_yaml = {
+        "robot_description_planning": load_yaml(
+            "ipa_demo_cell_description",
+            os.path.join("config", "ur10e", "cartesian_limits.yaml"),
+        )
+    }
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package="moveit_ros_move_group",
@@ -376,10 +395,12 @@ def generate_launch_description():
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,
-            {"move_group": ompl_pipeline},
+            {"move_group": pilz_industrial_planning_pipeline},
             trajectory_execution,
             moveit_controllers,
             planning_scene_monitor_parameters,
+            cartesian_limits_yaml,
+            joint_limits_yaml,
         ],
     )
 
@@ -431,7 +452,7 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
-            {"move_group": ompl_pipeline},
+            {"move_group": pilz_industrial_planning_pipeline},
             robot_description_kinematics,
         ],
     )
@@ -511,7 +532,10 @@ def generate_launch_description():
                     robot_description_semantic,
                     kinematics_yaml,
                     welding_param,
-                    {"ompl": ompl_pipeline},
+                    # {"ompl": ompl_pipeline},
+                    {
+                        "pilz_industrial_motion_planner": pilz_industrial_planning_pipeline
+                    },
                 ],
             ),
             ComposableNode(
@@ -607,9 +631,9 @@ def generate_launch_description():
         mongodb_server_node,
         container,
         # moveit_publish_scene_from_text,
-        plugin_task_description,
-        test_plugin_task_description,
-        processit_program,
+        # plugin_task_description,
+        # test_plugin_task_description,
+        # processit_program,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
