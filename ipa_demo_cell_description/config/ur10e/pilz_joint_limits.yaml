@@ -8,28 +8,28 @@
 #    https://www.universal-robots.com/articles/ur-articles/max-joint-torques
 #    retrieved: 2020-06-16, last modified: 2020-06-09
 joint_limits:
-  shoulder_pan:
+  shoulder_pan_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: true
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
     max_effort: 330.0
-    max_position: !degrees  360.0
-    max_velocity: !degrees  120.0
-    max_acceleration: !degrees  120.0
-    min_position: !degrees -360.0
-  shoulder_lift:
+    max_position: 6.283
+    max_velocity: 2.0944
+    max_acceleration: 2.0944 #TODO decrease for real robot
+    min_position: -6.283
+  shoulder_lift_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: true
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
     max_effort: 330.0
-    max_position: !degrees  360.0
-    max_velocity: !degrees  120.0
-    max_acceleration: !degrees  120.0
-    min_position: !degrees -360.0
+    max_position: 6.283
+    max_velocity: 2.0944
+    max_acceleration: 2.0944 #TODO decrease for real robot
+    min_position: -6.283
   elbow_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: true
@@ -47,40 +47,40 @@ joint_limits:
     #
     # Refer to https://github.com/ros-industrial/universal_robot/issues/265 for
     # more information.
-    max_position: !degrees  180.0
-    max_velocity: !degrees  180.0
-    max_acceleration: !degrees  180.0
-    min_position: !degrees -180.0
-  wrist_1:
+    max_position: 3.141
+    max_velocity: 3.141
+    max_acceleration: 3.141 #TODO decrease for real robot
+    min_position: -3.141
+  wrist_1_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: true
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
     max_effort: 56.0
-    max_position: !degrees  360.0
-    max_velocity: !degrees  180.0
-    max_acceleration: !degrees  180.0
-    min_position: !degrees -360.0
-  wrist_2:
+    max_position: 6.283
+    max_velocity: 3.141
+    max_acceleration: 3.141 #TODO decrease for real robot
+    min_position: -6.283
+  wrist_2_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: true
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
     max_effort: 56.0
-    max_position: !degrees  360.0
-    max_velocity: !degrees  180.0
-    max_acceleration: !degrees  180.0
-    min_position: !degrees -360.0
-  wrist_3:
+    max_position: 6.283
+    max_velocity: 3.141
+    max_acceleration: 3.141 #TODO decrease for real robot
+    min_position: -6.283
+  wrist_3_joint:
     # acceleration limits are not publicly available
     has_acceleration_limits: true
     has_effort_limits: true
     has_position_limits: true
     has_velocity_limits: true
     max_effort: 56.0
-    max_position: !degrees  360.0
-    max_velocity: !degrees  180.0
-    max_acceleration: !degrees  180.0
-    min_position: !degrees -360.0
+    max_position: 6.283
+    max_acceleration: 3.141 #TODO decrease for real robot
+    max_velocity: 3.141
+    min_position: -6.283

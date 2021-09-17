@@ -37,24 +37,26 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
-#include <hybrid_planning_demo/global_planner_component.h>
+#include <moveit/global_planner/global_planner_interface.h>
 #include <moveit/task_constructor/task.h>
 
 namespace hybrid_planning_demo
 {
 // Component node containing the global planner
-class GlobalMTCPlannerComponent : public GlobalPlannerComponent
+class GlobalMTCPlannerComponent : public moveit_hybrid_planning::GlobalPlannerInterface
 {
 public:
-  GlobalMTCPlannerComponent(const rclcpp::NodeOptions& options);
+  GlobalMTCPlannerComponent(){};
+  ~GlobalMTCPlannerComponent() override{};
+
+  bool initialize(const rclcpp::Node::SharedPtr& node) override;
+  bool reset() override;
+  moveit_msgs::msg::MotionPlanResponse
+  plan(const std::shared_ptr<rclcpp_action::ServerGoalHandle<moveit_msgs::action::GlobalPlanner>> global_goal_handle)
+      override;
 
 private:
-  // Initialize planning scene monitor and load pipelines
-  bool init() override;
-
-  // Plan global trajectory
-  moveit_msgs::msg::MotionPlanResponse plan(const moveit_msgs::msg::MotionPlanRequest& planning_problem) override;
-
   moveit::task_constructor::TaskPtr task_;
+  rclcpp::Node::SharedPtr node_ptr_;
 };
 }  // namespace hybrid_planning_demo

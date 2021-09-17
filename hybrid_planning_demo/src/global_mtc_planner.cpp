@@ -18,33 +18,46 @@
 
 namespace hybrid_planning_demo
 {
+const rclcpp::Logger LOGGER = rclcpp::get_logger("global_mtc_planner_component");
 using namespace std::chrono_literals;
 using namespace moveit::task_constructor;
-GlobalMTCPlannerComponent::GlobalMTCPlannerComponent(const rclcpp::NodeOptions& options)
-  : GlobalPlannerComponent(options)
+
+bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 {
+  task_ = std::make_shared<moveit::task_constructor::Task>();
+  node_ptr_ = node;
+  return true;
 }
 
-bool GlobalMTCPlannerComponent::init()
+bool GlobalMTCPlannerComponent::reset()
 {
   return true;
 }
 
-moveit_msgs::msg::MotionPlanResponse
-GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& planning_problem)
+moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<moveit_msgs::action::GlobalPlanner>> global_goal_handle)
 {
+  // Process goal
+  if ((global_goal_handle->get_goal())->desired_motion_sequence.items.size() > 1)
+  {
+    RCLCPP_WARN(LOGGER, "Global planner received motion sequence request with more than one item but the "
+                        "'moveit_planning_pipeline' plugin only accepts one item. Just using the first item as global "
+                        "planning goal!");
+  }
+  auto motion_plan_req = (global_goal_handle->get_goal())->desired_motion_sequence.items[0].req;
+
   // Result
   moveit_msgs::msg::MotionPlanResponse planning_solution;
   planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
   planning_solution.group_name = "ur_manipulator";
 
   task_ = std::make_shared<moveit::task_constructor::Task>();
-  Task& t = *task_;
+  moveit::task_constructor::Task& t = *task_;
   t.stages()->setName("global_mtc_task");
-  t.loadRobotModel(shared_from_this());
+  t.loadRobotModel(node_ptr_);
 
   // Sampling planner
-  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(shared_from_this());
+  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_);
   sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
 
   // Cartesian planner
@@ -55,7 +68,7 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
 
   // Set task properties
   t.setProperty("group", "ur_manipulator");
-  // t.setProperty("eef", eef_name_);
+  t.setProperty("eef", "welding_ee");
   // t.setProperty("hand", hand_group_name_);
   // t.setProperty("hand_grasping_frame", hand_frame_);
   t.setProperty("ik_frame", "tcp_welding_gun_link");
@@ -80,7 +93,7 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
   //   auto stage = std::make_unique<stages::MoveTo>("move to goal", sampling_planner);
   //   stage->setGroup("ur_manipulator");
   //   std::map<std::string, double> goal_state;
-  //   for (const auto& jc : planning_problem.goal_constraints[0].joint_constraints)
+  //   for (const auto& jc : motion_plan_req.goal_constraints[0].joint_constraints)
   //   {
   //     goal_state[jc.joint_name] = jc.position;
   //   }
@@ -102,6 +115,60 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
     stage->setDirection(vec);
     t.add(std::move(stage));
   }
+
+  /******************************************************
+   *          Cartesian Motion                          *
+   *****************************************************/
+
+  // TODO Work in progress
+  // geometry_msgs::msg::PoseStamped goal_pose;
+  // goal_pose.header.frame_id = "world";
+  // goal_pose.pose.position.x = 0.35;
+  // goal_pose.pose.position.y = 0.11;
+  // goal_pose.pose.position.z = 0.57;
+  // goal_pose.pose.orientation.x = 0.6;
+  // goal_pose.pose.orientation.y = 0.66;
+  // goal_pose.pose.orientation.z = -0.3;
+  // goal_pose.pose.orientation.w = 0.31;
+  // processit_tasks::CartesianTask cartesian_task_(node_ptr_);
+  // cartesian_task_.init("test", "test");
+  // cartesian_task_.addStage("Test Cartesian Path", goal_pose, "LIN", 0.1);
+
+  // constexpr size_t max_solutions = 1;
+  // cartesian_task_.task_->plan();
+  // if (cartesian_task_.task_->numSolutions() == max_solutions)
+  // {
+  //   moveit_task_constructor_msgs::msg::Solution solution;
+  //   cartesian_task_.task_->solutions().front()->fillMessage(solution, &cartesian_task_.task_->introspection());
+  //   auto& solution_traj = planning_solution.trajectory;
+  //   for (const auto& sub_traj : solution.sub_trajectory)
+  //   {
+  //     const auto& traj = sub_traj.trajectory;
+  //     if (solution_traj.joint_trajectory.joint_names.empty())
+  //       solution_traj.joint_trajectory.joint_names = traj.joint_trajectory.joint_names;
+  //     if (solution_traj.multi_dof_joint_trajectory.joint_names.empty())
+  //       solution_traj.multi_dof_joint_trajectory.joint_names = traj.multi_dof_joint_trajectory.joint_names;
+
+  //     const auto& jt = traj.joint_trajectory.points;
+  //     solution_traj.joint_trajectory.points.insert(solution_traj.joint_trajectory.points.end(), jt.begin(),
+  //     jt.end()); const auto& mdjt = traj.multi_dof_joint_trajectory.points;
+  //     solution_traj.multi_dof_joint_trajectory.points.insert(solution_traj.multi_dof_joint_trajectory.points.end(),
+  //                                                            mdjt.begin(), mdjt.end());
+  //   }
+  // }
+
+  // {
+  //   auto stage = std::make_unique<stages::MoveTo>("move to cartesian", cartesian_planner);
+  //   stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+  //   stage->setGroup("ur_manipulator");
+  //   stage->setGoal(goal_pose);
+  //   stage->restrictDirection(stages::MoveTo::FORWARD);
+  //   t.add(std::move(stage));
+  // }
+
+  /******************************************************
+   *          Execution                                 *
+   *****************************************************/
 
   constexpr size_t max_solutions = 1;
   t.plan(max_solutions);
@@ -131,6 +198,7 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
 }
 }  // namespace hybrid_planning_demo
 
-// Register the component with class_loader
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(hybrid_planning_demo::GlobalMTCPlannerComponent)
+// Register the component as plugin
+#include <pluginlib/class_list_macros.hpp>
+
+PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::GlobalMTCPlannerComponent, moveit_hybrid_planning::GlobalPlannerInterface);
