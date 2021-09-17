@@ -90,23 +90,6 @@ private:
   int task_id_;
   std::string planner_plugin_;
 
-  // Task transform
-  geometry_msgs::msg::Transform task_transform_;
-  double task_transform_x_ = 0;
-  double task_transform_y_ = 0;
-  double task_transform_z_ = 0;
-  double task_transform_roll_ = 0;
-  double task_transform_pitch_ = 0;
-  double task_transform_yaw_ = 0;
-
-  // Offset parameters
-  double cartesian_offset_x_ = 0;
-  double cartesian_offset_y_ = 0;
-  double cartesian_offset_z_ = 0;
-  double cartesian_offset_roll_ = 0;
-  double cartesian_offset_pitch_ = 0;
-  double cartesian_offset_yaw_ = 0;
-
   /***********************************
    * planner_interface configuration *
    ***********************************/
@@ -118,17 +101,12 @@ private:
   double max_trans_vel_;
   double max_rot_vel_;
 
-  // Maximum joint velocity
-  double away_max_joint_velocity_ = -1;  // if <=0, default will be used
-  double via_max_joint_velocity_ = -1;   // if <=0, default will be used
-
   // Maximum acceleration scaling
   double max_acceleration_scaling_ = 1.0;
 
   // Step size
   double step_size_ = 0.01;
   int num_planning_attempts_;                 //.01
-  double goal_joint_tolerance_ = 1e-4;        //.01
   double goal_position_tolerance_ = 1e-4;     //.01
   double goal_orientation_tolerance_ = 1e-3;  //.01
 
@@ -149,8 +127,6 @@ private:
   int max_solutions_ = 10;
 
   // // Planning group and link names
-  std::string arm_group_name_;      //"manipulator"
-  std::string moveit_ee_name_;      //"endeffector" //"flange"
   std::string welding_group_name_;  //"welding_endeffector" // "welding_arm"
   std::string welding_tcp_frame_;   //"welding_gun" // "welding_tcp"
 
