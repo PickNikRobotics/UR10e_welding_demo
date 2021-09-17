@@ -18,16 +18,12 @@ repositories:
     version: foxy
   moveit2:
     type: git
-    # TODO(henning): switch back to upstream
-    # url: https://github.com/ros-planning/moveit2.git
-    url: https://github.com/henningkayser/moveit2.git
+    url: https://github.com/ros-planning/moveit2.git
     version: feature/hybrid_planning
   moveit_msgs:
     type: git
-    # TODO(henning): switch back to upstream
-    # url: https://github.com/ros-planning/moveit_msgs.git
-    url: https://github.com/henningkayser/moveit_msgs.git
-    version: hybrid_planning-synced
+    # url: https://github.com/sjahr/moveit_msgs.git
+    version: hybrid_planning
   moveit_resources:
     type: git
     url: https://github.com/ros-planning/moveit_resources
@@ -71,7 +67,6 @@ repositories:
     type: git
     url: https://github.com/ros-planning/warehouse_ros_mongo
     version: ros2
-  # TODO(christianlandgraf): switch back to main repos as soon as the pr is merged
   rviz_visual_tools:
     type: git
     url: https://github.com/PickNikRobotics/rviz_visual_tools
