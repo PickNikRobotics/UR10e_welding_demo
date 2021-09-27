@@ -98,13 +98,13 @@ public:
     // visual_tools_->removeAllCollisionObjects();
     // visual_tools_->triggerPlanningSceneUpdate();
 
-    // TODO currently only hardcoded pose
+    // TODO currently only hardcoded, get pose from planning scene instead
     Eigen::Isometry3d workpiece_pose = Eigen::Isometry3d::Identity();
-    workpiece_pose.translation().x() = 0.1;
+    workpiece_pose.translation().x() = 0.2;
     workpiece_pose.translation().y() = -0.2;
     workpiece_pose.translation().z() = 0.71;
-    // Eigen::Quaternion<double>  q(0, 0, 1, 0);
-    // workpiece_pose = workpiece_pose.rotate(q);
+    Eigen::Quaternion<double> q(-0.7071068, 0, 0, 0.7071068);
+    workpiece_pose = workpiece_pose.rotate(q);
 
     // std::string stl_file = "file://" + workpiece_path + ".STL";
     // RCLCPP_INFO(LOGGER, "Loading mesh '%s'", stl_file.c_str());

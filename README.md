@@ -45,6 +45,7 @@ In a terminal:
 ros2 launch ipa_bringup hybrid_planning_demo.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
 ```
 
+Load the `.scene` file which contains the workpiece in RViz.
 Use the RViz Motion Planning widget to plan and execute to the state: `pre_welding_configuration`. In 2 more terminals, run:
 
 ```sh
