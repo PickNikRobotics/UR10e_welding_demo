@@ -19,11 +19,29 @@
 namespace hybrid_planning_demo
 {
 const rclcpp::Logger LOGGER = rclcpp::get_logger("global_mtc_planner_component");
+const std::string PLANNING_PIPELINES_NS = "planning_pipelines.";
+const std::string PLAN_REQUEST_PARAM_NS = "plan_request_params.";
+const std::string UNDEFINED = "<undefined>";
 using namespace std::chrono_literals;
 using namespace moveit::task_constructor;
 
 bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 {
+  // Declare planning pipeline paramter
+  node->declare_parameter<std::vector<std::string>>(PLANNING_PIPELINES_NS + "pipeline_names",
+                                                    std::vector<std::string>({ "pilz_industrial_motion_planner" }));
+  node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "namespace", UNDEFINED);
+  node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "planning_plugin",
+                                       "pilz_industrial_motion_planner::CommandPlanner");
+
+  // Declare PlanRequestParameters
+  node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planner_id", "LIN");
+  node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planning_pipeline", "pilz_industrial_motion_planner");
+  node->declare_parameter<int>(PLAN_REQUEST_PARAM_NS + "planning_attempts", 5);
+  node->declare_parameter<double>(PLAN_REQUEST_PARAM_NS + "planning_time", 1.0);
+  node->declare_parameter<double>(PLAN_REQUEST_PARAM_NS + "max_velocity_scaling_factor", 0.1);
+  node->declare_parameter<double>(PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor", 0.1);
+
   task_ = std::make_shared<moveit::task_constructor::Task>();
   node_ptr_ = node;
   return true;
@@ -46,6 +64,16 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   }
   auto motion_plan_req = (global_goal_handle->get_goal())->desired_motion_sequence.items[0].req;
 
+  // Set parameters required by the planning component
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planner_id", motion_plan_req.planner_id });
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_pipeline", motion_plan_req.pipeline_id });
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_attempts", motion_plan_req.num_planning_attempts });
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_time", motion_plan_req.allowed_planning_time });
+  node_ptr_->set_parameter(
+      { PLAN_REQUEST_PARAM_NS + "max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor });
+  node_ptr_->set_parameter(
+      { PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor });
+
   // Result
   moveit_msgs::msg::MotionPlanResponse planning_solution;
   planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
@@ -59,6 +87,11 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   // Sampling planner
   auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_);
   sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
+  sampling_planner->setProperty("max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor);
+  sampling_planner->setProperty("max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor);
+  sampling_planner->setProperty("planning_attempts", motion_plan_req.num_planning_attempts);
+  sampling_planner->setProperty("planning_time", motion_plan_req.allowed_planning_time);
+  sampling_planner->setPlannerId("LIN");
 
   // Cartesian planner
   auto cartesian_planner = std::make_shared<solvers::CartesianPath>();
