@@ -326,7 +326,8 @@ def generate_launch_description():
 
     pilz_industrial_planning_pipeline = {
         "planning_plugin": "pilz_industrial_motion_planner::CommandPlanner",
-        "request_adapters": "",
+        "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
+        # "request_adapters": "",
         "start_state_max_bounds_error": 0.1,
     }
 
@@ -536,6 +537,8 @@ def generate_launch_description():
                     {
                         "pilz_industrial_motion_planner": pilz_industrial_planning_pipeline
                     },
+                    cartesian_limits_yaml,
+                    joint_limits_yaml,
                 ],
             ),
             ComposableNode(
@@ -631,9 +634,8 @@ def generate_launch_description():
         mongodb_server_node,
         container,
         # moveit_publish_scene_from_text,
-        # plugin_task_description,
-        # test_plugin_task_description,
-        # processit_program,
+        plugin_task_description,
+        processit_program,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)

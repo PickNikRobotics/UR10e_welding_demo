@@ -50,6 +50,11 @@
 #include <moveit_msgs/action/hybrid_planning.hpp>
 #include <moveit_msgs/msg/display_robot_state.hpp>
 #include <moveit_msgs/msg/motion_plan_response.hpp>
+#include <moveit_msgs/msg/position_constraint.hpp>
+#include <processit_msgs/srv/add_pose_marker.hpp>
+#include <processit_msgs/srv/load_task_description.hpp>
+
+#include <tf2_eigen/tf2_eigen.hpp>
 
 using namespace std::chrono_literals;
 const rclcpp::Logger LOGGER = rclcpp::get_logger("ipa_hybrid_planning_demo");
@@ -62,6 +67,7 @@ public:
     node_ = node;
     hp_action_client_ = rclcpp_action::create_client<moveit_msgs::action::HybridPlanning>(node_, "run_hybrid_planning"),
     robot_state_publisher_ = node_->create_publisher<moveit_msgs::msg::DisplayRobotState>("display_robot_state", 1);
+    addintmarker_client = node_->create_client<processit_msgs::srv::AddPoseMarker>("pose_marker/add_pose_marker");
 
     // collision_object_1_.header.frame_id = "panda_link0";
     // collision_object_1_.id = "box1";
@@ -113,6 +119,54 @@ public:
     //     });
   }
 
+  // TODO Move these methods as soon as service call in rolling is fixed
+
+  std::string addPoseMarker(geometry_msgs::msg::Pose pose)
+  {
+    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
+    request->pose = pose;
+    request->frame_id = "world";
+    request->add_controls = false;
+    request->scale = 0.1;
+    request->marker_type = 2;
+    request->marker_name = "pose_marker_";
+
+    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
+    auto result = addintmarker_client->async_send_request(request);
+    response = result.get();
+    return response->int_marker_id;
+  }
+
+  std::string addLineMarker(int id, double length, geometry_msgs::msg::Pose pose)
+  {
+    // Add Pose Marker add start and end point
+    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
+    request->pose = pose;
+    request->frame_id = "world";
+    request->add_controls = false;
+    request->scale = length;
+    request->marker_type = 3;
+    request->marker_name = "seam_marker_";
+
+    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
+    auto result = addintmarker_client->async_send_request(request);
+    response = result.get();
+    return response->int_marker_id;
+  }
+
+  geometry_msgs::msg::Pose getPose(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
+  {
+    geometry_msgs::msg::Pose pose;
+    pose.position.x = positionVector[0];
+    pose.position.y = positionVector[1];
+    pose.position.z = positionVector[2];
+    pose.orientation.x = q.x();
+    pose.orientation.y = q.y();
+    pose.orientation.z = q.z();
+    pose.orientation.w = q.w();
+    return pose;
+  }
+
   void run()
   {
     RCLCPP_INFO(LOGGER, "Initialize Planning Scene Monitor");
@@ -143,6 +197,10 @@ public:
       return;
     }
 
+    // Get path to workpiece
+    std::string workpiece_path;
+    node_->get_parameter("workpiece_path", workpiece_path);
+
     // geometry_msgs::msg::Pose box_pose;
     // box_pose.position.x = 0.4;
     // box_pose.position.y = 0.0;
@@ -152,11 +210,34 @@ public:
     // collision_object_1_.primitive_poses.push_back(box_pose);
     // collision_object_1_.operation = collision_object_1_.ADD;
 
-    // // Add object to planning scene
-    // {  // Lock PlanningScene
-    //   planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);
-    //   scene->processCollisionObjectMsg(collision_object_1_);
-    // }  // Unlock PlanningScene
+    // TODO currently only hardcoded pose
+    Eigen::Isometry3d workpiece_pose = Eigen::Isometry3d::Identity();
+    workpiece_pose.translation().x() = 0.2;
+    workpiece_pose.translation().y() = -0.2;
+    workpiece_pose.translation().z() = 0.71;
+    Eigen::Quaternion<double> q(-0.7071068, 0, 0, 0.7071068);
+    workpiece_pose = workpiece_pose.rotate(q);
+
+    // Service call to load a task description and visualize them in RViz
+    rclcpp::Client<processit_msgs::srv::LoadTaskDescription>::SharedPtr client =
+        node_->create_client<processit_msgs::srv::LoadTaskDescription>("plugin_task_description/load_task_description");
+    auto request = std::make_shared<processit_msgs::srv::LoadTaskDescription::Request>();
+
+    // Set task description filename
+    std::string task_file = workpiece_path + ".xml";
+    RCLCPP_INFO(LOGGER, "Loading task '%s'", task_file.c_str());
+    request->task_description_file = task_file;
+
+    // Set workpiece pose (task description is relative to workpiece frame)
+    geometry_msgs::msg::PoseStamped workpiece_pose_stamped;
+    workpiece_pose_stamped.header.frame_id = "world";
+    workpiece_pose_stamped.pose = tf2::toMsg(workpiece_pose);
+    request->workpiece_pose = workpiece_pose_stamped;
+
+    while (!client->wait_for_service(1s))
+    {
+      RCLCPP_INFO(LOGGER, "service not available, waiting again...");
+    }
 
     RCLCPP_INFO(LOGGER, "Wait 2s see collision object");
     rclcpp::sleep_for(2s);
@@ -181,18 +262,45 @@ public:
     goal_motion_request.allowed_planning_time = 2.0;
     goal_motion_request.planner_id = "RRTConnectkConfigDefault";
 
-    // Set some hard-coded goal configuration for testing
-    moveit::core::RobotState goal_state(robot_model);
-    std::vector<double> joint_values;
-    std::map<std::string, double> current_state_values =
-        planning_scene_monitor_->getStateMonitor()->getCurrentStateValues();
-    for (auto const& x : current_state_values)
-      joint_values.push_back(x.second + 0.01);
-    goal_state.setJointGroupPositions(joint_model_group, joint_values);
+    // Load task description
+    processit_msgs::srv::LoadTaskDescription::Response::SharedPtr response;
+    auto result = client->async_send_request(request);
+    response = result.get();
 
-    goal_motion_request.goal_constraints.resize(1);
-    goal_motion_request.goal_constraints[0] =
-        kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
+    int i = 0;
+    int no_seams = response->weld_seams.size();
+    goal_motion_request.goal_constraints.resize(no_seams);
+
+    for (auto const& weld_seam : response->weld_seams)
+    {
+      for (auto const& pose : weld_seam.poses)
+      {
+        RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
+
+        // Publish poses in RViz
+        addPoseMarker(pose);
+
+        // Add poses to motion plan request
+
+        moveit_msgs::msg::PositionConstraint position_constraint;
+        position_constraint.target_point_offset.x = pose.position.x;
+        position_constraint.target_point_offset.y = pose.position.y;
+        position_constraint.target_point_offset.z = pose.position.z;
+        goal_motion_request.goal_constraints[0].position_constraints.push_back(position_constraint);
+
+        moveit_msgs::msg::OrientationConstraint orientation_constraint;
+        orientation_constraint.orientation.x = pose.orientation.x;
+        orientation_constraint.orientation.y = pose.orientation.y;
+        orientation_constraint.orientation.z = pose.orientation.z;
+        orientation_constraint.orientation.w = pose.orientation.w;
+        goal_motion_request.goal_constraints[0].orientation_constraints.push_back(orientation_constraint);
+      }
+      i++;
+    }
+
+    // goal_motion_request.goal_constraints.resize(1);
+    // goal_motion_request.goal_constraints[0] =
+    //     kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
 
     // Create Hybrid Planning action request
     moveit_msgs::msg::MotionSequenceItem sequence_item;
@@ -240,6 +348,7 @@ public:
 private:
   rclcpp::Node::SharedPtr node_;
   rclcpp_action::Client<moveit_msgs::action::HybridPlanning>::SharedPtr hp_action_client_;
+  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedPtr addintmarker_client;
   rclcpp::Publisher<moveit_msgs::msg::DisplayRobotState>::SharedPtr robot_state_publisher_;
   rclcpp::Subscription<moveit_msgs::msg::MotionPlanResponse>::SharedPtr global_solution_subscriber_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;

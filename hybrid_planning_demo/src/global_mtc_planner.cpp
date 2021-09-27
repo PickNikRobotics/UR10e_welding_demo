@@ -14,6 +14,7 @@
 #include <moveit/task_constructor/solvers/cartesian_path.h>
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 
+#include <tf2_eigen/tf2_eigen.hpp>
 #include <processit_tasks/cartesian_task.h>
 
 namespace hybrid_planning_demo
@@ -137,14 +138,95 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   /******************************************************
    *          Relative Motion                           *
    *****************************************************/
+  // {
+  //   auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
+  //   stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+  //   stage->setIKFrame("tcp_welding_gun_link");
+  //   stage->properties().set("marker_ns", "retreat");
+  //   geometry_msgs::msg::Vector3Stamped vec;
+  //   vec.header.frame_id = "world";
+  //   vec.vector.y = 0.5;
+  //   stage->setDirection(vec);
+  //   t.add(std::move(stage));
+  // }
+
+  /******************************************************
+   *          WELDING                                   *
+   *****************************************************/
+
+  // TODO: Use processit_tasks instead of hacked approach, weld, retract poses
+
+  // Move to approach
+  {
+    geometry_msgs::msg::PoseStamped goal_pose;
+    goal_pose.header.frame_id = "world";
+    goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
+    goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
+    goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
+    goal_pose.pose.orientation.x = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.x;
+    goal_pose.pose.orientation.y = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.y;
+    goal_pose.pose.orientation.z = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.z;
+    goal_pose.pose.orientation.w = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.w;
+
+    // Apply offset to get approach pose
+    Eigen::Isometry3d goal;
+    tf2::fromMsg(goal_pose.pose, goal);
+    Eigen::Isometry3d approach_offset = Eigen::Isometry3d::Identity();
+    approach_offset.translation().z() = -0.1;
+    goal = goal * approach_offset;
+    tf2::convert(goal, goal_pose.pose);
+
+    sampling_planner->setPlannerId("PTP");
+    auto stage = std::make_unique<stages::MoveTo>("move to start", sampling_planner);
+    stage->setGroup("ur_manipulator");
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    stage->setGoal(goal_pose);
+    t.add(std::move(stage));
+  }
+
+  // Approach
   {
     auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
     stage->properties().configureInitFrom(Stage::PARENT, { "group" });
     stage->setIKFrame("tcp_welding_gun_link");
     stage->properties().set("marker_ns", "retreat");
     geometry_msgs::msg::Vector3Stamped vec;
-    vec.header.frame_id = "world";
-    vec.vector.y = 0.5;
+    vec.header.frame_id = "tcp_welding_gun_link";
+    vec.vector.z = 0.1;
+    stage->setDirection(vec);
+    t.add(std::move(stage));
+  }
+
+  // Weld
+  {
+    geometry_msgs::msg::PoseStamped goal_pose;
+    goal_pose.header.frame_id = "world";
+    goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
+    goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
+    goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
+    goal_pose.pose.orientation.x = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.x;
+    goal_pose.pose.orientation.y = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.y;
+    goal_pose.pose.orientation.z = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.z;
+    goal_pose.pose.orientation.w = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.w;
+
+    auto stage = std::make_unique<stages::MoveTo>("linear motion", sampling_planner);
+    stage->setGroup("ur_manipulator");
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    stage->setGoal(goal_pose);
+    t.add(std::move(stage));
+  }
+
+  // Retract
+  {
+    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
+    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    geometry_msgs::msg::Vector3Stamped vec;
+    vec.header.frame_id = "tcp_welding_gun_link";
+    vec.vector.z = -0.1;
     stage->setDirection(vec);
     t.add(std::move(stage));
   }
