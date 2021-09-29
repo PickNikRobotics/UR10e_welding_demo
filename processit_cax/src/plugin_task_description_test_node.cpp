@@ -29,53 +29,6 @@ public:
   PluginTaskDescriptionTestNode(const rclcpp::Node::SharedPtr& node)
   {
     node_ = node;
-    addintmarker_client = node_->create_client<processit_msgs::srv::AddPoseMarker>("pose_marker/add_pose_marker");
-  }
-
-  std::string addPoseMarker(geometry_msgs::msg::Pose pose)
-  {
-    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
-    request->pose = pose;
-    request->frame_id = "world";
-    request->add_controls = false;
-    request->scale = 0.1;
-    request->marker_type = 2;
-    request->marker_name = "pose_marker_";
-
-    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
-    auto result = addintmarker_client->async_send_request(request);
-    response = result.get();
-    return response->int_marker_id;
-  }
-
-  std::string addLineMarker(int id, double length, geometry_msgs::msg::Pose pose)
-  {
-    // Add Pose Marker add start and end point
-    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
-    request->pose = pose;
-    request->frame_id = "world";
-    request->add_controls = false;
-    request->scale = length;
-    request->marker_type = 3;
-    request->marker_name = "seam_marker_";
-
-    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
-    auto result = addintmarker_client->async_send_request(request);
-    response = result.get();
-    return response->int_marker_id;
-  }
-
-  geometry_msgs::msg::Pose getPose(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
-  {
-    geometry_msgs::msg::Pose pose;
-    pose.position.x = positionVector[0];
-    pose.position.y = positionVector[1];
-    pose.position.z = positionVector[2];
-    pose.orientation.x = q.x();
-    pose.orientation.y = q.y();
-    pose.orientation.z = q.z();
-    pose.orientation.w = q.w();
-    return pose;
   }
 
   void run()
@@ -144,7 +97,6 @@ public:
       for (auto const& pose : weld_seam.poses)
       {
         RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
-        addPoseMarker(pose);
       }
     }
 
@@ -153,7 +105,6 @@ public:
 
 private:
   rclcpp::Node::SharedPtr node_;
-  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedPtr addintmarker_client;
 };
 
 int main(int argc, char** argv)
@@ -165,7 +116,7 @@ int main(int argc, char** argv)
 
   PluginTaskDescriptionTestNode plugin_task_description_test_node(node);
   std::thread run_plugin_task_description_test([&plugin_task_description_test_node]() {
-    rclcpp::sleep_for(10s);
+    // rclcpp::sleep_for(10s);
     // Get parameter containing task description file name and run test node
     plugin_task_description_test_node.run();
   });

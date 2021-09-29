@@ -60,7 +60,8 @@ void PluginTaskDescription::initializeSubscribers()
  *
  * @return std::string the pose marker id
  */
-std::string PluginTaskDescription::addPoseMarker(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
+rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFutureAndRequestId
+PluginTaskDescription::addPoseMarker(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
 {
   // Create pose (assuming mm convention)
   geometry_msgs::msg::Pose pose = getPose(positionVector, q);
@@ -72,27 +73,14 @@ std::string PluginTaskDescription::addPoseMarker(Eigen::Vector3d& positionVector
   request->scale = 0.1;
   request->marker_type = 2;
   request->marker_name = "pose_marker_";
-  auto result = addintmarker_client->async_send_request(request);
-  return result.get()->int_marker_id;
 
-  // using ServiceResponseFuture =
-  //   rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFuture;
-  // auto response_received_callback = [this](ServiceResponseFuture future) {
-  //     auto result = future.get();
-  //     RCLCPP_INFO_STREAM(LOGGER, "Got result");
-  //     return future.get()->int_marker_id;
-  //   };
-  // auto future_result = addintmarker_client->async_send_request(request, response_received_callback);
-
-  // auto result = addintmarker_client->async_send_request(request);
-  // if (rclcpp::spin_until_future_complete(nh_, result) ==
-  //   rclcpp::FutureReturnCode::SUCCESS)
-  // {
-  //   return result.get()->int_marker_id;
-  // } else {
-  //   RCLCPP_ERROR(LOGGER, "Failed to call service add_two_ints");
-  //   return "";
-  // }
+  using ServiceResponseFuture = rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFuture;
+  auto response_received_callback = [this](ServiceResponseFuture future) {
+    auto result = future.get();
+    RCLCPP_INFO_STREAM(LOGGER, "Created marker " << result->int_marker_id);
+  };
+  auto future_result = addintmarker_client->async_send_request(request, response_received_callback);
+  return future_result;
 }
 
 /**
@@ -107,8 +95,9 @@ std::string PluginTaskDescription::addPoseMarker(Eigen::Vector3d& positionVector
  * @param positionVectorStart  an Eigen:Vector3d, in mm convention
  * @param q the quaternion of the manufacturingFrame in the start pose
  */
-std::string PluginTaskDescription::addLineMarker(int id, double length, Eigen::Vector3d& positionVectorCenter,
-                                                 Eigen::Quaternion<double>& q)
+rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFutureAndRequestId
+PluginTaskDescription::addLineMarker(int id, double length, Eigen::Vector3d& positionVectorCenter,
+                                     Eigen::Quaternion<double>& q)
 {
   // Create pose (assuming mm convention)
   geometry_msgs::msg::Pose pose = getPose(positionVectorCenter, q);
@@ -121,28 +110,14 @@ std::string PluginTaskDescription::addLineMarker(int id, double length, Eigen::V
   request->scale = length;
   request->marker_type = 3;
   request->marker_name = "seam_marker_";
-  auto result = addintmarker_client->async_send_request(request);
-  return result.get()->int_marker_id;
 
-  // using ServiceResponseFuture =
-  //   rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFuture;
-  // auto response_received_callback = [this](ServiceResponseFuture future) {
-  //     // auto result = future.get();
-  //     // RCLCPP_INFO_STREAM(LOGGER, "Got result line");
-  //     // return future.get()->int_marker_id;
-  //     return "";
-  //   };
-  // auto future_result = addintmarker_client->async_send_request(request, response_received_callback);
-
-  // auto result = addintmarker_client->async_send_request(request);
-  // if (rclcpp::spin_until_future_complete(nh_, result) ==
-  //   rclcpp::FutureReturnCode::SUCCESS)
-  // {
-  //   return result.get()->int_marker_id;
-  // } else {
-  //   RCLCPP_ERROR(LOGGER, "Failed to call service add_two_ints");
-  //   return "";
-  // }
+  using ServiceResponseFuture = rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFuture;
+  auto response_received_callback = [this](ServiceResponseFuture future) {
+    auto result = future.get();
+    RCLCPP_INFO_STREAM(LOGGER, "Created line " << result->int_marker_id);
+  };
+  auto future_result = addintmarker_client->async_send_request(request, response_received_callback);
+  return future_result;
 }
 
 /**
@@ -232,10 +207,9 @@ void PluginTaskDescription::loadTaskDescription(
         Eigen::Vector3d positionVectorCenter = unit_scaling * manufacturingFrameCenter.col(3).head(3);
         Eigen::Vector3d positionVectorEnd = unit_scaling * manufacturingFrameEnd.col(3).head(3);
 
-        // TODO Migrate visualization
         // Set start and end pose and get pose marker id;
-        // int_marker_id_start = addPoseMarker(positionVectorStart, q);
-        // int_marker_id_end = addPoseMarker(positionVectorEnd, q);
+        auto future_start = addPoseMarker(positionVectorStart, q);
+        auto future_end = addPoseMarker(positionVectorEnd, q);
 
         // Add a line (cube) connecting both points in direction of y axis (along the seam)
         // // Add a line (cube) connecting both points
@@ -259,9 +233,8 @@ void PluginTaskDescription::loadTaskDescription(
 
       task_length += segment_length;
     }
-
-    response->success = true;
   }
+  response->success = true;
 }
 
 }  // namespace processit_cax

@@ -38,8 +38,10 @@ private:
   void initializeServices();
   void initializeSubscribers();
 
-  std::string addPoseMarker(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q);
-  std::string addLineMarker(int id, double length, Eigen::Vector3d& positionVectorCenter, Eigen::Quaternion<double>& q);
+  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFutureAndRequestId
+  addPoseMarker(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q);
+  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedFutureAndRequestId
+  addLineMarker(int id, double length, Eigen::Vector3d& positionVectorCenter, Eigen::Quaternion<double>& q);
 };
 
 };  // namespace processit_cax

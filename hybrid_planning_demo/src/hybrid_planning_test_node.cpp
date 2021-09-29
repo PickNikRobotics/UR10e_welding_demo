@@ -67,7 +67,6 @@ public:
     node_ = node;
     hp_action_client_ = rclcpp_action::create_client<moveit_msgs::action::HybridPlanning>(node_, "run_hybrid_planning"),
     robot_state_publisher_ = node_->create_publisher<moveit_msgs::msg::DisplayRobotState>("display_robot_state", 1);
-    addintmarker_client = node_->create_client<processit_msgs::srv::AddPoseMarker>("pose_marker/add_pose_marker");
 
     // collision_object_1_.header.frame_id = "panda_link0";
     // collision_object_1_.id = "box1";
@@ -117,54 +116,6 @@ public:
     //         scene->processCollisionObjectMsg(collision_object_1_);
     //       }  // Unlock PlanningScene
     //     });
-  }
-
-  // TODO Move these methods as soon as service call in rolling is fixed
-
-  std::string addPoseMarker(geometry_msgs::msg::Pose pose)
-  {
-    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
-    request->pose = pose;
-    request->frame_id = "world";
-    request->add_controls = false;
-    request->scale = 0.1;
-    request->marker_type = 2;
-    request->marker_name = "pose_marker_";
-
-    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
-    auto result = addintmarker_client->async_send_request(request);
-    response = result.get();
-    return response->int_marker_id;
-  }
-
-  std::string addLineMarker(int id, double length, geometry_msgs::msg::Pose pose)
-  {
-    // Add Pose Marker add start and end point
-    auto request = std::make_shared<processit_msgs::srv::AddPoseMarker::Request>();
-    request->pose = pose;
-    request->frame_id = "world";
-    request->add_controls = false;
-    request->scale = length;
-    request->marker_type = 3;
-    request->marker_name = "seam_marker_";
-
-    processit_msgs::srv::AddPoseMarker::Response::SharedPtr response;
-    auto result = addintmarker_client->async_send_request(request);
-    response = result.get();
-    return response->int_marker_id;
-  }
-
-  geometry_msgs::msg::Pose getPose(Eigen::Vector3d& positionVector, Eigen::Quaternion<double>& q)
-  {
-    geometry_msgs::msg::Pose pose;
-    pose.position.x = positionVector[0];
-    pose.position.y = positionVector[1];
-    pose.position.z = positionVector[2];
-    pose.orientation.x = q.x();
-    pose.orientation.y = q.y();
-    pose.orientation.z = q.z();
-    pose.orientation.w = q.w();
-    return pose;
   }
 
   void run()
@@ -277,11 +228,7 @@ public:
       {
         RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
 
-        // Publish poses in RViz
-        addPoseMarker(pose);
-
         // Add poses to motion plan request
-
         moveit_msgs::msg::PositionConstraint position_constraint;
         position_constraint.target_point_offset.x = pose.position.x;
         position_constraint.target_point_offset.y = pose.position.y;
@@ -348,7 +295,6 @@ public:
 private:
   rclcpp::Node::SharedPtr node_;
   rclcpp_action::Client<moveit_msgs::action::HybridPlanning>::SharedPtr hp_action_client_;
-  rclcpp::Client<processit_msgs::srv::AddPoseMarker>::SharedPtr addintmarker_client;
   rclcpp::Publisher<moveit_msgs::msg::DisplayRobotState>::SharedPtr robot_state_publisher_;
   rclcpp::Subscription<moveit_msgs::msg::MotionPlanResponse>::SharedPtr global_solution_subscriber_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
