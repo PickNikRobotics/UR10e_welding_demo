@@ -46,9 +46,6 @@ namespace hybrid_planning_demo
 class GlobalMTCPlannerComponent : public moveit_hybrid_planning::GlobalPlannerInterface
 {
 public:
-  GlobalMTCPlannerComponent(){};
-  ~GlobalMTCPlannerComponent() override{};
-
   bool initialize(const rclcpp::Node::SharedPtr& node) override;
   bool reset() override;
   moveit_msgs::msg::MotionPlanResponse

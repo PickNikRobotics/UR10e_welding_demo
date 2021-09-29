@@ -46,9 +46,6 @@ namespace hybrid_planning_demo
 class SimpleServoSampler : public moveit_hybrid_planning::TrajectoryOperatorInterface
 {
 public:
-  SimpleServoSampler(){};
-  ~SimpleServoSampler() override{};
-
   bool initialize(const rclcpp::Node::SharedPtr& node, const moveit::core::RobotModelConstPtr& robot_model,
                   const std::string& group_name) override;
   moveit_msgs::action::LocalPlanner::Feedback
