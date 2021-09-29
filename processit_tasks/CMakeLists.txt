@@ -14,6 +14,7 @@ find_package(rosparam_shortcuts REQUIRED)
 find_package(moveit_task_constructor_core REQUIRED)
 find_package(moveit_task_constructor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
@@ -23,6 +24,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   moveit_task_constructor_core
   moveit_task_constructor_msgs
   tf2_geometry_msgs
+  yaml_cpp_vendor
 )
 
 include_directories(
