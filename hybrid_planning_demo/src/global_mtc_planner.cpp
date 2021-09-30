@@ -20,7 +20,8 @@
 namespace hybrid_planning_demo
 {
 const rclcpp::Logger LOGGER = rclcpp::get_logger("global_mtc_planner_component");
-const std::string PLANNING_PIPELINES_NS = "planning_pipelines.";
+const std::string PLANNING_PIPELINES_NS =
+    "ompl.";  // See "https://github.com/ros-planning/moveit_task_constructor/pull/170/files#r719602378"
 const std::string PLAN_REQUEST_PARAM_NS = "plan_request_params.";
 const std::string UNDEFINED = "<undefined>";
 using namespace std::chrono_literals;
@@ -86,7 +87,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   t.loadRobotModel(node_ptr_);
 
   // Sampling planner
-  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_);
+  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_, "pilz_industrial_motion_planner");
   sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
   sampling_planner->setProperty("max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor);
   sampling_planner->setProperty("max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor);
@@ -119,38 +120,6 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   }
 
   /******************************************************
-   *          Joint Goal Motion                         *
-   *****************************************************/
-  // Move to joint state constraints specified in goal request
-  // NOTE: this assumes only joint constraints are specified
-  // {
-  //   auto stage = std::make_unique<stages::MoveTo>("move to goal", sampling_planner);
-  //   stage->setGroup("ur_manipulator");
-  //   std::map<std::string, double> goal_state;
-  //   for (const auto& jc : motion_plan_req.goal_constraints[0].joint_constraints)
-  //   {
-  //     goal_state[jc.joint_name] = jc.position;
-  //   }
-  //   stage->setGoal(goal_state);
-  //   t.add(std::move(stage));
-  // }
-
-  /******************************************************
-   *          Relative Motion                           *
-   *****************************************************/
-  // {
-  //   auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
-  //   stage->properties().configureInitFrom(Stage::PARENT, { "group" });
-  //   stage->setIKFrame("tcp_welding_gun_link");
-  //   stage->properties().set("marker_ns", "retreat");
-  //   geometry_msgs::msg::Vector3Stamped vec;
-  //   vec.header.frame_id = "world";
-  //   vec.vector.y = 0.5;
-  //   stage->setDirection(vec);
-  //   t.add(std::move(stage));
-  // }
-
-  /******************************************************
    *          WELDING                                   *
    *****************************************************/
 
@@ -163,10 +132,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
     goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
     goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
     goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
-    goal_pose.pose.orientation.x = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.x;
-    goal_pose.pose.orientation.y = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.y;
-    goal_pose.pose.orientation.z = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.z;
-    goal_pose.pose.orientation.w = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation.w;
+    goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
 
     // Apply offset to get approach pose
     Eigen::Isometry3d goal;
@@ -205,10 +171,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
     goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
     goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
     goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
-    goal_pose.pose.orientation.x = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.x;
-    goal_pose.pose.orientation.y = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.y;
-    goal_pose.pose.orientation.z = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.z;
-    goal_pose.pose.orientation.w = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation.w;
+    goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation;
 
     auto stage = std::make_unique<stages::MoveTo>("linear motion", sampling_planner);
     stage->setGroup("ur_manipulator");
@@ -230,56 +193,6 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
     stage->setDirection(vec);
     t.add(std::move(stage));
   }
-
-  /******************************************************
-   *          Cartesian Motion                          *
-   *****************************************************/
-
-  // TODO Work in progress
-  // geometry_msgs::msg::PoseStamped goal_pose;
-  // goal_pose.header.frame_id = "world";
-  // goal_pose.pose.position.x = 0.35;
-  // goal_pose.pose.position.y = 0.11;
-  // goal_pose.pose.position.z = 0.57;
-  // goal_pose.pose.orientation.x = 0.6;
-  // goal_pose.pose.orientation.y = 0.66;
-  // goal_pose.pose.orientation.z = -0.3;
-  // goal_pose.pose.orientation.w = 0.31;
-  // processit_tasks::CartesianTask cartesian_task_(node_ptr_);
-  // cartesian_task_.init("test", "test");
-  // cartesian_task_.addStage("Test Cartesian Path", goal_pose, "LIN", 0.1);
-
-  // constexpr size_t max_solutions = 1;
-  // cartesian_task_.task_->plan();
-  // if (cartesian_task_.task_->numSolutions() == max_solutions)
-  // {
-  //   moveit_task_constructor_msgs::msg::Solution solution;
-  //   cartesian_task_.task_->solutions().front()->fillMessage(solution, &cartesian_task_.task_->introspection());
-  //   auto& solution_traj = planning_solution.trajectory;
-  //   for (const auto& sub_traj : solution.sub_trajectory)
-  //   {
-  //     const auto& traj = sub_traj.trajectory;
-  //     if (solution_traj.joint_trajectory.joint_names.empty())
-  //       solution_traj.joint_trajectory.joint_names = traj.joint_trajectory.joint_names;
-  //     if (solution_traj.multi_dof_joint_trajectory.joint_names.empty())
-  //       solution_traj.multi_dof_joint_trajectory.joint_names = traj.multi_dof_joint_trajectory.joint_names;
-
-  //     const auto& jt = traj.joint_trajectory.points;
-  //     solution_traj.joint_trajectory.points.insert(solution_traj.joint_trajectory.points.end(), jt.begin(),
-  //     jt.end()); const auto& mdjt = traj.multi_dof_joint_trajectory.points;
-  //     solution_traj.multi_dof_joint_trajectory.points.insert(solution_traj.multi_dof_joint_trajectory.points.end(),
-  //                                                            mdjt.begin(), mdjt.end());
-  //   }
-  // }
-
-  // {
-  //   auto stage = std::make_unique<stages::MoveTo>("move to cartesian", cartesian_planner);
-  //   stage->properties().configureInitFrom(Stage::PARENT, { "group" });
-  //   stage->setGroup("ur_manipulator");
-  //   stage->setGoal(goal_pose);
-  //   stage->restrictDirection(stages::MoveTo::FORWARD);
-  //   t.add(std::move(stage));
-  // }
 
   /******************************************************
    *          Execution                                 *

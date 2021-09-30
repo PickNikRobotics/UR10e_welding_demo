@@ -236,10 +236,7 @@ public:
         goal_motion_request.goal_constraints[0].position_constraints.push_back(position_constraint);
 
         moveit_msgs::msg::OrientationConstraint orientation_constraint;
-        orientation_constraint.orientation.x = pose.orientation.x;
-        orientation_constraint.orientation.y = pose.orientation.y;
-        orientation_constraint.orientation.z = pose.orientation.z;
-        orientation_constraint.orientation.w = pose.orientation.w;
+        orientation_constraint.orientation = pose.orientation;
         goal_motion_request.goal_constraints[0].orientation_constraints.push_back(orientation_constraint);
       }
       i++;

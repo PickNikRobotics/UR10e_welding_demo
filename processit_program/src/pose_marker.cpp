@@ -215,16 +215,7 @@ void PoseMarker::editPoseMarkerService(const std::shared_ptr<processit_msgs::srv
                                        std::shared_ptr<processit_msgs::srv::EditPoseMarker::Response> response)
 {
   std::string marker_name = request->marker_name;
-  geometry_msgs::msg::Pose new_pose;
-  new_pose.position.x = request->new_pose.position.x;
-  new_pose.position.y = request->new_pose.position.y;
-  new_pose.position.z = request->new_pose.position.z;
-  new_pose.orientation.x = request->new_pose.orientation.x;
-  new_pose.orientation.y = request->new_pose.orientation.y;
-  new_pose.orientation.z = request->new_pose.orientation.z;
-  new_pose.orientation.w = request->new_pose.orientation.w;
-
-  int_marker_server.setPose(request->marker_name, new_pose);
+  int_marker_server.setPose(request->marker_name, request->new_pose);
   int_marker_server.applyChanges();
 }
 
@@ -269,13 +260,7 @@ std::string PoseMarker::addPoseMarker(const geometry_msgs::msg::Pose& pose, cons
   int_marker.name = marker_name + std::to_string(pose_marker_counter + 1);
   pose_marker_counter++;
   int_marker.scale = scale;  // default 0.1
-  int_marker.pose.position.x = pose.position.x;
-  int_marker.pose.position.y = pose.position.y;
-  int_marker.pose.position.z = pose.position.z;
-  int_marker.pose.orientation.x = pose.orientation.x;
-  int_marker.pose.orientation.y = pose.orientation.y;
-  int_marker.pose.orientation.z = pose.orientation.z;
-  int_marker.pose.orientation.w = pose.orientation.w;
+  int_marker.pose = pose;
 
   // add a box with an interactive control to the pose marker
   int_marker.controls.push_back(makeBoxControl(int_marker, marker_type, add_controls));

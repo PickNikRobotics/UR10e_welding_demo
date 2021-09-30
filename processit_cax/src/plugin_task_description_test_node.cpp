@@ -9,7 +9,7 @@
 #include <moveit/robot_model_loader/robot_model_loader.h>
 #include <moveit/planning_scene/planning_scene.h>
 // #include <rviz_visual_tools/rviz_visual_tools.hpp>
-#include <moveit_visual_tools/moveit_visual_tools.h>
+// #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <processit_msgs/srv/load_task_description.hpp>
