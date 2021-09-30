@@ -25,7 +25,7 @@ find_package(visualization_msgs REQUIRED)
 find_package(processit_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
-find_package(moveit_visual_tools REQUIRED)
+# find_package(moveit_visual_tools REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
 find_package(tinyxml_vendor REQUIRED)
@@ -37,7 +37,7 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   processit_msgs
   geometry_msgs
   moveit_ros_planning
-  moveit_visual_tools
+  # moveit_visual_tools
   tf2_eigen
   tinyxml_vendor
   Eigen3

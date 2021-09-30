@@ -6,8 +6,9 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(interactive_markers REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
-find_package(moveit_visual_tools REQUIRED)
+# find_package(moveit_visual_tools REQUIRED)
 find_package(processit_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(visualization_msgs REQUIRED)
@@ -16,8 +17,9 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
   rclcpp_components
   geometry_msgs
+  interactive_markers
   moveit_ros_planning_interface
-  moveit_visual_tools
+  # moveit_visual_tools
   processit_msgs
   std_srvs
   visualization_msgs

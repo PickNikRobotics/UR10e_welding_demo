@@ -19,7 +19,7 @@ Get the code
 cd $COLCON_WS/src
 git clone https://github.com/PickNikRobotics/UR10e_welding_demo.git # Can get specific branch
 vcs import < UR10e_welding_demo/upstream.repos
-rosdep install -r --from-paths . --ignore-src --rosdistro foxy -y
+rosdep install -r --from-paths . --ignore-src --rosdistro rolling -y
 ```
 
 Build

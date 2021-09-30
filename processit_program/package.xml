@@ -11,8 +11,9 @@
 
   <depend>rclcpp</depend>
   <depend>geometry_msgs</depend>
+  <depend>interactive_markers</depend>
   <depend>moveit_ros_planning_interface</depend>
-  <depend>moveit_visual_tools</depend>
+  <!-- <depend>moveit_visual_tools</depend> -->
   <depend>processit_msgs</depend>
   <depend>visualization_msgs</depend>
 
