@@ -49,8 +49,6 @@ namespace hybrid_planning_demo
 class ServoSolver : public moveit_hybrid_planning::LocalConstraintSolverInterface
 {
 public:
-  ServoSolver(){};
-  ~ServoSolver() override{};
   bool initialize(const rclcpp::Node::SharedPtr& node,
                   const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                   const std::string& group_name) override;

@@ -392,6 +392,7 @@ def generate_launch_description():
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
+        name="move_group",
         parameters=[
             robot_description,
             robot_description_semantic,
