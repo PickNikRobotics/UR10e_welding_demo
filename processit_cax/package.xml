@@ -9,6 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
+  <depend>moveit_ros_planning</depend>
   <depend>rclcpp</depend>
   <depend>visualization_msgs</depend>
   <depend>processit_msgs</depend>
