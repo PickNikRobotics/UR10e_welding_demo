@@ -27,8 +27,10 @@ find_package(geometry_msgs REQUIRED)
 find_package(moveit_ros_planning REQUIRED)
 # find_package(moveit_visual_tools REQUIRED)
 find_package(tf2_eigen REQUIRED)
-find_package(Eigen3 REQUIRED COMPONENTS Eigen3)
+find_package(Eigen3 REQUIRED)
+find_package(eigen3_cmake_module REQUIRED)
 find_package(tinyxml_vendor REQUIRED)
+find_package(yaml_cpp_vendor REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
@@ -41,6 +43,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tf2_eigen
   tinyxml_vendor
   Eigen3
+  eigen3_cmake_module
+  yaml_cpp_vendor
 )
 
 include_directories(
