@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<Taskdefinition>
+    <Tasks>
+        <WeldTask ID="3" State="-1">
+            <FilletWeldSegment ID="-1" DirectionFlag="0">
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="200.000000" z="10.000000" />
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <PositionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="200.000000" z="10.000000" />
+                        <Point x="40.000000" y="50.000000" z="10.000000" />
+                    </LinearContour>
+                </PositionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="200.000000" z="10.000000" />
+                        <Point x="-110.000000" y="200.000000" z="10.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+                <DirectionSegment>
+                    <LinearContour>
+                        <Point x="40.000000" y="200.000000" z="10.000000" />
+                        <Point x="40.000000" y="200.000000" z="160.000000" />
+                    </LinearContour>
+                </DirectionSegment>
+            </FilletWeldSegment>
+        </WeldTask>
+    </Tasks>
+    <TaskSequence S="12" />
+</Taskdefinition>

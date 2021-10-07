@@ -8,36 +8,44 @@ repositories:
     type: git
     url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git
     version: main
-  control_msgs:
+  ur_msgs:
     type: git
-    url: https://github.com/ros-controls/control_msgs.git
-    version: foxy-devel
-  geometric_shapes:
-    type: git
-    url: https://github.com/ros-planning/geometric_shapes
-    version: foxy
+    url: https://github.com/destogl/ur_msgs.git
+    version: ros2
   moveit2:
     type: git
-    # TODO(henning): switch back to upstream
-    # url: https://github.com/ros-planning/moveit2.git
+    # Temporary branch including Hybrid Planning and Pilz Planner port
     url: https://github.com/henningkayser/moveit2.git
-    version: feature/hybrid_planning
+    version: tmp-hybrid_planning_pilz
+    # PR branch: https://github.com/ros-planning/moveit2/pull/488
+    # version: feature/hybrid_planning
+    # TODO(henningkayser) switch to upstream when merged
+    # version: main
   moveit_msgs:
     type: git
-    # TODO(henning): switch back to upstream
-    # url: https://github.com/ros-planning/moveit_msgs.git
+    # Temporary branch (rebased on moveit_msgs:ros2 branch)
     url: https://github.com/henningkayser/moveit_msgs.git
-    version: hybrid_planning-synced
+    version: hybrid_planning
+    # PR branch: https://github.com/ros-planning/moveit_msgs/pull/114
+    # url: https://github.com/sjahr/moveit_msgs.git
+    # TODO(henningkayser): Switch back to upstream when merged
+    # url: https://github.com/ros-planning/moveit_msgs.git
+    # version: ros2
   moveit_resources:
     type: git
-    url: https://github.com/ros-planning/moveit_resources
-    version: ros2
+    # WIP branch for Pilz Planner Port
+    url: https://github.com/henningkayser/moveit_resources.git
+    version: pr-port_prbt_packages
+    # TODO(henningkayser): Switch back to upstream
+    # url: https://github.com/ros-planning/moveit_resources.git
+    # version: ros2
+    # Pilz Planner config
   moveit_task_constructor:
     type: git
-    # TODO(henningkayser): switch back upstream
-    # url: https://github.com/ros-planning/moveit_task_constructor.git
-    # version: ros2
+    # PR branch: https://github.com/ros-planning/moveit_task_constructor/pull/170
     url: https://github.com/JafarAbdi/moveit_task_constructor.git
+    # TODO(henningkayser): switch back upstream when merged
+    # url: https://github.com/ros-planning/moveit_task_constructor.git
     version: ros2
   rosparam_shortcuts:
     type: git
@@ -45,29 +53,17 @@ repositories:
     version: ros2
   ros2_control:
     type: git
-    url: https://github.com/ros-controls/ros2_control
-    version: master
-  ros2_control_demos:
-    type: git
-    url: https://github.com/ros-controls/ros2_control_demos.git
-    version: add_demo_nodes
+    url: https://github.com/ros-controls/ros2_control.git
+    version: 1.0.0
   ros2_controllers:
     type: git
-    url: https://github.com/ros-controls/ros2_controllers
-    version: master
-  srdfdom:
+    url: https://github.com/ros-controls/ros2_controllers.git
+    version: 1.0.0
+  rviz_visual_tools:
     type: git
-    url: https://github.com/ros-planning/srdfdom
+    url: https://github.com/PickNikRobotics/rviz_visual_tools.git
     version: ros2
-  ur_msgs:
+  moveit_visual_tools:
     type: git
-    url: https://github.com/destogl/ur_msgs.git
-    version: ros2
-  warehouse_ros:
-    type: git
-    url: https://github.com/ros-planning/warehouse_ros
-    version: ros2
-  warehouse_ros_mongo:
-    type: git
-    url: https://github.com/ros-planning/warehouse_ros_mongo
+    url: https://github.com/vatanaksoytezer/moveit_visual_tools.git
     version: ros2

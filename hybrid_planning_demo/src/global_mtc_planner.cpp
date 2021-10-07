@@ -14,36 +14,86 @@
 #include <moveit/task_constructor/solvers/cartesian_path.h>
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 
+#include <tf2_eigen/tf2_eigen.hpp>
+#include <processit_tasks/cartesian_task.h>
+
 namespace hybrid_planning_demo
 {
+const rclcpp::Logger LOGGER = rclcpp::get_logger("global_mtc_planner_component");
+const std::string PLANNING_PIPELINES_NS =
+    "ompl.";  // See "https://github.com/ros-planning/moveit_task_constructor/pull/170/files#r719602378"
+const std::string PLAN_REQUEST_PARAM_NS = "plan_request_params.";
+const std::string UNDEFINED = "<undefined>";
 using namespace std::chrono_literals;
 using namespace moveit::task_constructor;
-GlobalMTCPlannerComponent::GlobalMTCPlannerComponent(const rclcpp::NodeOptions& options)
-  : GlobalPlannerComponent(options)
+
+bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 {
+  // Declare planning pipeline paramter
+  node->declare_parameter<std::vector<std::string>>(PLANNING_PIPELINES_NS + "pipeline_names",
+                                                    std::vector<std::string>({ "pilz_industrial_motion_planner" }));
+  node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "namespace", UNDEFINED);
+  node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "planning_plugin",
+                                       "pilz_industrial_motion_planner::CommandPlanner");
+
+  // Declare PlanRequestParameters
+  node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planner_id", "LIN");
+  node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planning_pipeline", "pilz_industrial_motion_planner");
+  node->declare_parameter<int>(PLAN_REQUEST_PARAM_NS + "planning_attempts", 5);
+  node->declare_parameter<double>(PLAN_REQUEST_PARAM_NS + "planning_time", 1.0);
+  node->declare_parameter<double>(PLAN_REQUEST_PARAM_NS + "max_velocity_scaling_factor", 0.1);
+  node->declare_parameter<double>(PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor", 0.1);
+
+  task_ = std::make_shared<moveit::task_constructor::Task>();
+  node_ptr_ = node;
+  return true;
 }
 
-bool GlobalMTCPlannerComponent::init()
+bool GlobalMTCPlannerComponent::reset()
 {
   return true;
 }
 
-moveit_msgs::msg::MotionPlanResponse
-GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& planning_problem)
+moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
+    const std::shared_ptr<rclcpp_action::ServerGoalHandle<moveit_msgs::action::GlobalPlanner>> global_goal_handle)
 {
+  // Process goal
+  if ((global_goal_handle->get_goal())->desired_motion_sequence.items.size() > 1)
+  {
+    RCLCPP_WARN(LOGGER, "Global planner received motion sequence request with more than one item but the "
+                        "'moveit_planning_pipeline' plugin only accepts one item. Just using the first item as global "
+                        "planning goal!");
+  }
+  auto motion_plan_req = (global_goal_handle->get_goal())->desired_motion_sequence.items[0].req;
+
+  // Set parameters required by the planning component
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planner_id", motion_plan_req.planner_id });
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_pipeline", motion_plan_req.pipeline_id });
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_attempts", motion_plan_req.num_planning_attempts });
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_time", motion_plan_req.allowed_planning_time });
+  node_ptr_->set_parameter(
+      { PLAN_REQUEST_PARAM_NS + "max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor });
+  node_ptr_->set_parameter(
+      { PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor });
+
   // Result
   moveit_msgs::msg::MotionPlanResponse planning_solution;
   planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
   planning_solution.group_name = "ur_manipulator";
 
   task_ = std::make_shared<moveit::task_constructor::Task>();
-  Task& t = *task_;
+  moveit::task_constructor::Task& t = *task_;
   t.stages()->setName("global_mtc_task");
-  t.loadRobotModel(shared_from_this());
+  t.loadRobotModel(node_ptr_);
 
   // Sampling planner
-  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(shared_from_this());
+  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_, "pilz_industrial_motion_planner");
   sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
+  sampling_planner->setProperty("max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor);
+  sampling_planner->setProperty("max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor);
+  sampling_planner->setProperty("planning_attempts", motion_plan_req.num_planning_attempts);
+  sampling_planner->setProperty("planning_time", motion_plan_req.allowed_planning_time);
+  sampling_planner->setPlannerId("LIN");
 
   // Cartesian planner
   auto cartesian_planner = std::make_shared<solvers::CartesianPath>();
@@ -53,7 +103,7 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
 
   // Set task properties
   t.setProperty("group", "ur_manipulator");
-  // t.setProperty("eef", eef_name_);
+  t.setProperty("eef", "welding_ee");
   // t.setProperty("hand", hand_group_name_);
   // t.setProperty("hand_grasping_frame", hand_frame_);
   t.setProperty("ik_frame", "tcp_welding_gun_link");
@@ -70,36 +120,83 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
   }
 
   /******************************************************
-   *          Joint Goal Motion                         *
+   *          WELDING                                   *
    *****************************************************/
-  // Move to joint state constraints specified in goal request
-  // NOTE: this assumes only joint constraints are specified
-  // {
-  //   auto stage = std::make_unique<stages::MoveTo>("move to goal", sampling_planner);
-  //   stage->setGroup("ur_manipulator");
-  //   std::map<std::string, double> goal_state;
-  //   for (const auto& jc : planning_problem.goal_constraints[0].joint_constraints)
-  //   {
-  //     goal_state[jc.joint_name] = jc.position;
-  //   }
-  //   stage->setGoal(goal_state);
-  //   t.add(std::move(stage));
-  // }
 
-  /******************************************************
-   *          Relative Motion                           *
-   *****************************************************/
+  // TODO: Use processit_tasks instead of hacked approach, weld, retract poses
+
+  // Move to approach
+  {
+    geometry_msgs::msg::PoseStamped goal_pose;
+    goal_pose.header.frame_id = "world";
+    goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
+    goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
+    goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
+    goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
+
+    // Apply offset to get approach pose
+    Eigen::Isometry3d goal;
+    tf2::fromMsg(goal_pose.pose, goal);
+    Eigen::Isometry3d approach_offset = Eigen::Isometry3d::Identity();
+    approach_offset.translation().z() = -0.1;
+    goal = goal * approach_offset;
+    tf2::convert(goal, goal_pose.pose);
+
+    sampling_planner->setPlannerId("PTP");
+    auto stage = std::make_unique<stages::MoveTo>("move to start", sampling_planner);
+    stage->setGroup("ur_manipulator");
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    stage->setGoal(goal_pose);
+    t.add(std::move(stage));
+  }
+
+  // Approach
   {
     auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
     stage->properties().configureInitFrom(Stage::PARENT, { "group" });
     stage->setIKFrame("tcp_welding_gun_link");
     stage->properties().set("marker_ns", "retreat");
     geometry_msgs::msg::Vector3Stamped vec;
-    vec.header.frame_id = "world";
-    vec.vector.y = 0.5;
+    vec.header.frame_id = "tcp_welding_gun_link";
+    vec.vector.z = 0.1;
     stage->setDirection(vec);
     t.add(std::move(stage));
   }
+
+  // Weld
+  {
+    geometry_msgs::msg::PoseStamped goal_pose;
+    goal_pose.header.frame_id = "world";
+    goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
+    goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
+    goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
+    goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation;
+
+    auto stage = std::make_unique<stages::MoveTo>("linear motion", sampling_planner);
+    stage->setGroup("ur_manipulator");
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    stage->setGoal(goal_pose);
+    t.add(std::move(stage));
+  }
+
+  // Retract
+  {
+    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
+    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+    stage->setIKFrame("tcp_welding_gun_link");
+    stage->properties().set("marker_ns", "retreat");
+    geometry_msgs::msg::Vector3Stamped vec;
+    vec.header.frame_id = "tcp_welding_gun_link";
+    vec.vector.z = -0.1;
+    stage->setDirection(vec);
+    t.add(std::move(stage));
+  }
+
+  /******************************************************
+   *          Execution                                 *
+   *****************************************************/
 
   constexpr size_t max_solutions = 1;
   t.plan(max_solutions);
@@ -129,6 +226,7 @@ GlobalMTCPlannerComponent::plan(const moveit_msgs::msg::MotionPlanRequest& plann
 }
 }  // namespace hybrid_planning_demo
 
-// Register the component with class_loader
-#include <rclcpp_components/register_node_macro.hpp>
-RCLCPP_COMPONENTS_REGISTER_NODE(hybrid_planning_demo::GlobalMTCPlannerComponent)
+// Register the component as plugin
+#include <pluginlib/class_list_macros.hpp>
+
+PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::GlobalMTCPlannerComponent, moveit_hybrid_planning::GlobalPlannerInterface);

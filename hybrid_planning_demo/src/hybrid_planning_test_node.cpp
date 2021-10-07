@@ -50,6 +50,11 @@
 #include <moveit_msgs/action/hybrid_planning.hpp>
 #include <moveit_msgs/msg/display_robot_state.hpp>
 #include <moveit_msgs/msg/motion_plan_response.hpp>
+#include <moveit_msgs/msg/position_constraint.hpp>
+#include <processit_msgs/srv/add_pose_marker.hpp>
+#include <processit_msgs/srv/load_task_description.hpp>
+
+#include <tf2_eigen/tf2_eigen.hpp>
 
 using namespace std::chrono_literals;
 const rclcpp::Logger LOGGER = rclcpp::get_logger("ipa_hybrid_planning_demo");
@@ -126,8 +131,8 @@ public:
       planning_scene_monitor_->startStateMonitor();
       planning_scene_monitor_->providePlanningSceneService();  // let RViz display query PlanningScene
       planning_scene_monitor_->setPlanningScenePublishingFrequency(100);
-      planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
-                                                            "/planning_scene");
+      // planning_scene_monitor_->startPublishingPlanningScene(planning_scene_monitor::PlanningSceneMonitor::UPDATE_SCENE,
+      //                                                       "/planning_scene");
       planning_scene_monitor_->startSceneMonitor();
     }
 
@@ -143,6 +148,10 @@ public:
       return;
     }
 
+    // Get path to workpiece
+    std::string workpiece_path;
+    node_->get_parameter("workpiece_path", workpiece_path);
+
     // geometry_msgs::msg::Pose box_pose;
     // box_pose.position.x = 0.4;
     // box_pose.position.y = 0.0;
@@ -152,11 +161,34 @@ public:
     // collision_object_1_.primitive_poses.push_back(box_pose);
     // collision_object_1_.operation = collision_object_1_.ADD;
 
-    // // Add object to planning scene
-    // {  // Lock PlanningScene
-    //   planning_scene_monitor::LockedPlanningSceneRW scene(planning_scene_monitor_);
-    //   scene->processCollisionObjectMsg(collision_object_1_);
-    // }  // Unlock PlanningScene
+    // TODO currently only hardcoded pose
+    Eigen::Isometry3d workpiece_pose = Eigen::Isometry3d::Identity();
+    workpiece_pose.translation().x() = 0.2;
+    workpiece_pose.translation().y() = -0.2;
+    workpiece_pose.translation().z() = 0.71;
+    Eigen::Quaternion<double> q(-0.7071068, 0, 0, 0.7071068);
+    workpiece_pose = workpiece_pose.rotate(q);
+
+    // Service call to load a task description and visualize them in RViz
+    rclcpp::Client<processit_msgs::srv::LoadTaskDescription>::SharedPtr client =
+        node_->create_client<processit_msgs::srv::LoadTaskDescription>("plugin_task_description/load_task_description");
+    auto request = std::make_shared<processit_msgs::srv::LoadTaskDescription::Request>();
+
+    // Set task description filename
+    std::string task_file = workpiece_path + ".xml";
+    RCLCPP_INFO(LOGGER, "Loading task '%s'", task_file.c_str());
+    request->task_description_file = task_file;
+
+    // Set workpiece pose (task description is relative to workpiece frame)
+    geometry_msgs::msg::PoseStamped workpiece_pose_stamped;
+    workpiece_pose_stamped.header.frame_id = "world";
+    workpiece_pose_stamped.pose = tf2::toMsg(workpiece_pose);
+    request->workpiece_pose = workpiece_pose_stamped;
+
+    while (!client->wait_for_service(1s))
+    {
+      RCLCPP_INFO(LOGGER, "service not available, waiting again...");
+    }
 
     RCLCPP_INFO(LOGGER, "Wait 2s see collision object");
     rclcpp::sleep_for(2s);
@@ -166,30 +198,65 @@ public:
     robot_model_loader::RobotModelLoader robot_model_loader(node_, "robot_description");
     const moveit::core::RobotModelPtr& robot_model = robot_model_loader.getModel();
 
-    // Create a RobotState and JointModelGroup
-    const auto robot_state = std::make_shared<moveit::core::RobotState>(robot_model);
-    const moveit::core::JointModelGroup* joint_model_group = robot_state->getJointModelGroup(planning_group);
+    // Get current robot state and create joint model group
+    auto curr_robot_state = planning_scene_monitor_->getStateMonitor()->getCurrentState();
+    const moveit::core::JointModelGroup* joint_model_group = curr_robot_state->getJointModelGroup(planning_group);
 
-    // Configure a valid robot state
-    robot_state->setToDefaultValues(joint_model_group, "test_configuration");
+    // Setup Motion Plan Request
+    moveit_msgs::msg::MotionPlanRequest goal_motion_request;
 
-    auto goal_msg = moveit_msgs::action::HybridPlanning::Goal();
+    moveit::core::robotStateToRobotStateMsg(*curr_robot_state, goal_motion_request.start_state);
+    goal_motion_request.group_name = planning_group;
+    goal_motion_request.num_planning_attempts = 10;
+    goal_motion_request.max_velocity_scaling_factor = 0.1;
+    goal_motion_request.max_acceleration_scaling_factor = 0.1;
+    goal_motion_request.allowed_planning_time = 2.0;
+    goal_motion_request.planner_id = "RRTConnectkConfigDefault";
 
-    moveit::core::robotStateToRobotStateMsg(*robot_state, goal_msg.request.start_state);
-    goal_msg.request.group_name = planning_group;
-    goal_msg.request.num_planning_attempts = 10;
-    goal_msg.request.max_velocity_scaling_factor = 0.1;
-    goal_msg.request.max_acceleration_scaling_factor = 0.1;
-    goal_msg.request.allowed_planning_time = 2.0;
-    goal_msg.request.planner_id = "RRTConnectkConfigDefault";
+    // Load task description
+    processit_msgs::srv::LoadTaskDescription::Response::SharedPtr response;
+    auto result = client->async_send_request(request);
+    response = result.get();
 
-    moveit::core::RobotState goal_state(robot_model);
-    std::vector<double> joint_values = { -0.19, -0.29, -1.29, -1.57, -4.53, -4.71 };
-    goal_state.setJointGroupPositions(joint_model_group, joint_values);
+    int i = 0;
+    int no_seams = response->weld_seams.size();
+    goal_motion_request.goal_constraints.resize(no_seams);
 
-    goal_msg.request.goal_constraints.resize(1);
-    goal_msg.request.goal_constraints[0] =
-        kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
+    for (auto const& weld_seam : response->weld_seams)
+    {
+      for (auto const& pose : weld_seam.poses)
+      {
+        RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
+
+        // Add poses to motion plan request
+        moveit_msgs::msg::PositionConstraint position_constraint;
+        position_constraint.target_point_offset.x = pose.position.x;
+        position_constraint.target_point_offset.y = pose.position.y;
+        position_constraint.target_point_offset.z = pose.position.z;
+        goal_motion_request.goal_constraints[0].position_constraints.push_back(position_constraint);
+
+        moveit_msgs::msg::OrientationConstraint orientation_constraint;
+        orientation_constraint.orientation = pose.orientation;
+        goal_motion_request.goal_constraints[0].orientation_constraints.push_back(orientation_constraint);
+      }
+      i++;
+    }
+
+    // goal_motion_request.goal_constraints.resize(1);
+    // goal_motion_request.goal_constraints[0] =
+    //     kinematic_constraints::constructGoalConstraints(goal_state, joint_model_group);
+
+    // Create Hybrid Planning action request
+    moveit_msgs::msg::MotionSequenceItem sequence_item;
+    sequence_item.req = goal_motion_request;
+    sequence_item.blend_radius = 0.0;  // Single goal
+
+    moveit_msgs::msg::MotionSequenceRequest sequence_request;
+    sequence_request.items.push_back(sequence_item);
+
+    auto goal_action_request = moveit_msgs::action::HybridPlanning::Goal();
+    goal_action_request.planning_group = planning_group;
+    goal_action_request.motion_sequence = sequence_request;
 
     auto send_goal_options = rclcpp_action::Client<moveit_msgs::action::HybridPlanning>::SendGoalOptions();
     send_goal_options.result_callback =
@@ -214,12 +281,12 @@ public:
     send_goal_options.feedback_callback =
         [](rclcpp_action::ClientGoalHandle<moveit_msgs::action::HybridPlanning>::SharedPtr /*unused*/,
            const std::shared_ptr<const moveit_msgs::action::HybridPlanning::Feedback> feedback) {
-          RCLCPP_INFO(LOGGER, feedback->feedback);
+          RCLCPP_INFO(LOGGER, feedback->feedback.c_str());
         };
 
     RCLCPP_INFO(LOGGER, "Sending hybrid planning goal");
     // Ask server to achieve some goal and wait until it's accepted
-    auto goal_handle_future = hp_action_client_->async_send_goal(goal_msg, send_goal_options);
+    auto goal_handle_future = hp_action_client_->async_send_goal(goal_action_request, send_goal_options);
   }
 
 private:
@@ -251,7 +318,7 @@ int main(int argc, char** argv)
 
   HybridPlanningDemo demo(node);
   std::thread run_demo([&demo]() {
-    rclcpp::sleep_for(5s);
+    rclcpp::sleep_for(3s);
     demo.run();
   });
 

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com)
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+  <xacro:macro name="endeffector" params="prefix">
+    <link name="welding_gun_link">
+      <inertial>
+        <origin xyz="-0.0785750635579513 0.0478255317464427 -0.281129549529667" rpy="0 0 0" />
+        <mass value="1.86859564603062" />
+        <inertia ixx="0.00485321168704067" ixy="-8.98634828494543E-05" ixz="-0.00150096446074707" iyy="0.00978317996859146" iyz="-0.000164554654502753" izz="0.00695496569317101" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://ipa_demo_cell_description/meshes/welding_gun_lorch_scancontrol_3000.STL" />
+        </geometry>
+        <material name="">
+          <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://ipa_demo_cell_description/meshes/welding_gun_lorch_scancontrol_3000.STL" />
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+</robot>

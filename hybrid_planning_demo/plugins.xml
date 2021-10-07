@@ -8,3 +8,8 @@
     <description>Remake of SimpleSampler to use with Servo local solver.</description>
   </class>
 </library>
+<library path="global_mtc_planner_component">
+  <class type="hybrid_planning_demo::GlobalMTCPlannerComponent" base_class_type="moveit_hybrid_planning::GlobalPlannerInterface">
+    <description>Include MTC as global planner component.</description>
+  </class>
+</library>

@@ -5,6 +5,8 @@ find_package(ament_cmake REQUIRED)
 find_package(moveit_hybrid_planning REQUIRED)
 find_package(moveit_servo REQUIRED)
 find_package(moveit_task_constructor_core REQUIRED)
+find_package(processit_msgs REQUIRED)
+find_package(processit_tasks REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclcpp_components REQUIRED)
@@ -15,6 +17,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   moveit_servo
   moveit_task_constructor_core
   pluginlib
+  processit_msgs
+  processit_tasks
   rclcpp
   rclcpp_action
   rclcpp_components
@@ -28,7 +32,7 @@ ament_target_dependencies(hybrid_planning_test_node ${THIS_PACKAGE_INCLUDE_DEPEN
 add_library(global_mtc_planner_component SHARED src/global_mtc_planner.cpp)
 set_target_properties(global_mtc_planner_component PROPERTIES VERSION "${${PROJECT_NAME}_VERSION}")
 ament_target_dependencies(global_mtc_planner_component ${THIS_PACKAGE_INCLUDE_DEPENDS})
-rclcpp_components_register_nodes(global_mtc_planner_component "hybrid_planning_demo::GlobalMTCPlannerComponent")
+# rclcpp_components_register_nodes(global_mtc_planner_component "hybrid_planning_demo::GlobalMTCPlannerComponent")
 
 add_library(servo_local_solver SHARED src/servo_solver.cpp)
 set_target_properties(servo_local_solver PROPERTIES VERSION "${${PROJECT_NAME}_VERSION}")
@@ -57,6 +61,7 @@ install(
 pluginlib_export_plugin_description_file(moveit_hybrid_planning plugins.xml)
 
 ament_export_libraries(
+  global_mtc_planner_component
   servo_local_solver
   servo_sampler
 )

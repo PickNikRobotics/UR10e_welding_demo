@@ -138,6 +138,13 @@ def generate_launch_description():
           Used only if 'use_fake_hardware' parameter is true.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "workpiece_name",
+            default_value="Workpiece_Demo_nominal",
+            description="Folder of workpiece to load",
+        )
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -153,6 +160,8 @@ def generate_launch_description():
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    # Demo Arguments
+    workpiece_name = LaunchConfiguration("workpiece_name")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -274,13 +283,28 @@ def generate_launch_description():
     kinematics_yaml = load_yaml("ipa_moveit_config", "config/kinematics.yaml")
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
+    # Compose the path to the workpiece
+    workpiece_path_param = PathJoinSubstitution(
+        [
+            FindPackageShare("ipa_demo_support"),
+            "workpieces",
+            workpiece_name,
+            workpiece_name,
+        ]
+    )
+
     # Test Node
     test_request_node = Node(
         package="hybrid_planning_demo",
         executable="hybrid_planning_test_node",
         name="hybrid_planning_test_node",
         output="screen",
-        parameters=[robot_description, robot_description_semantic, kinematics_yaml],
+        parameters=[
+            {"workpiece_path": workpiece_path_param},
+            robot_description,
+            robot_description_semantic,
+            kinematics_yaml,
+        ],
     )
 
     nodes_to_start = [
