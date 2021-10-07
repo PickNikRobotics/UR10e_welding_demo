@@ -106,7 +106,10 @@ SimpleServoSampler::getLocalTrajectory(const moveit::core::RobotState& current_s
     double last_joint_distance = fabs(current_state.getVariablePosition("wrist_3_joint") -
                                       next_desired_goal_state.getVariablePosition("wrist_3_joint"));
     double distance_minus_last_joint = sum_joint_distance - last_joint_distance;
-    if (distance_minus_last_joint <= 0.1)
+    double pos_distance = (current_state.getFrameTransform("tcp_welding_gun_link").translation() -
+                           next_desired_goal_state.getFrameTransform("tcp_welding_gun_link").translation())
+                              .norm();
+    if (distance_minus_last_joint <= 0.2 && pos_distance < 0.005)
     {
       // Update index (and thus desired robot state)
       next_waypoint_index_ += 1;
