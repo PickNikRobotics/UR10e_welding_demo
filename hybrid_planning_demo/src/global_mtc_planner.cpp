@@ -46,6 +46,7 @@ bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 
   task_ = std::make_shared<moveit::task_constructor::Task>();
   node_ptr_ = node;
+  cartesian_task_ = processit_tasks::CartesianTask(node_ptr_, task_);
   return true;
 }
 
@@ -81,25 +82,10 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
   planning_solution.group_name = "ur_manipulator";
 
-  task_ = std::make_shared<moveit::task_constructor::Task>();
+  // task_ = std::make_shared<moveit::task_constructor::Task>();
   moveit::task_constructor::Task& t = *task_;
   t.stages()->setName("global_mtc_task");
   t.loadRobotModel(node_ptr_);
-
-  // Sampling planner
-  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_, "pilz_industrial_motion_planner");
-  sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
-  sampling_planner->setProperty("max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor);
-  sampling_planner->setProperty("max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor);
-  sampling_planner->setProperty("planning_attempts", motion_plan_req.num_planning_attempts);
-  sampling_planner->setProperty("planning_time", motion_plan_req.allowed_planning_time);
-  sampling_planner->setPlannerId("LIN");
-
-  // Cartesian planner
-  auto cartesian_planner = std::make_shared<solvers::CartesianPath>();
-  cartesian_planner->setMaxVelocityScaling(1.0);
-  cartesian_planner->setMaxAccelerationScaling(1.0);
-  cartesian_planner->setStepSize(.01);
 
   // Set task properties
   t.setProperty("group", "ur_manipulator");
@@ -108,91 +94,19 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   // t.setProperty("hand_grasping_frame", hand_frame_);
   t.setProperty("ik_frame", "tcp_welding_gun_link");
 
-  /****************************************************
-   *                                                  *
-   *               Current State                      *
-   *                                                  *
-   ***************************************************/
-  using namespace moveit::task_constructor::stages;
-  {
-    auto current_state = std::make_unique<stages::CurrentState>("current state");
-    t.add(std::move(current_state));
-  }
-
-  /******************************************************
-   *          WELDING                                   *
-   *****************************************************/
-
-  // TODO: Use processit_tasks instead of hacked approach, weld, retract poses
-
-  // Move to approach
-  {
-    geometry_msgs::msg::PoseStamped goal_pose;
-    goal_pose.header.frame_id = "world";
-    goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
-    goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
-    goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
-    goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
-
-    // Apply offset to get approach pose
-    Eigen::Isometry3d goal;
-    tf2::fromMsg(goal_pose.pose, goal);
-    Eigen::Isometry3d approach_offset = Eigen::Isometry3d::Identity();
-    approach_offset.translation().z() = -0.1;
-    goal = goal * approach_offset;
-    tf2::convert(goal, goal_pose.pose);
-
-    sampling_planner->setPlannerId("PTP");
-    auto stage = std::make_unique<stages::MoveTo>("move to start", sampling_planner);
-    stage->setGroup("ur_manipulator");
-    stage->setIKFrame("tcp_welding_gun_link");
-    stage->properties().set("marker_ns", "retreat");
-    stage->setGoal(goal_pose);
-    t.add(std::move(stage));
-  }
-
-  // Approach
-  {
-    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
-    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
-    stage->setIKFrame("tcp_welding_gun_link");
-    stage->properties().set("marker_ns", "retreat");
-    geometry_msgs::msg::Vector3Stamped vec;
-    vec.header.frame_id = "tcp_welding_gun_link";
-    vec.vector.z = 0.1;
-    stage->setDirection(vec);
-    t.add(std::move(stage));
-  }
-
-  // Weld
-  {
-    geometry_msgs::msg::PoseStamped goal_pose;
-    goal_pose.header.frame_id = "world";
-    goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
-    goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
-    goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
-    goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation;
-
-    auto stage = std::make_unique<stages::MoveTo>("linear motion", sampling_planner);
-    stage->setGroup("ur_manipulator");
-    stage->setIKFrame("tcp_welding_gun_link");
-    stage->properties().set("marker_ns", "retreat");
-    stage->setGoal(goal_pose);
-    t.add(std::move(stage));
-  }
-
-  // Retract
-  {
-    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
-    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
-    stage->setIKFrame("tcp_welding_gun_link");
-    stage->properties().set("marker_ns", "retreat");
-    geometry_msgs::msg::Vector3Stamped vec;
-    vec.header.frame_id = "tcp_welding_gun_link";
-    vec.vector.z = -0.1;
-    stage->setDirection(vec);
-    t.add(std::move(stage));
-  }
+  // Task initialization
+  // ROS_DEBUG_NAMED(LOGNAME, "Initializing welding task");
+  // task_caption_ = "pass_" + std::to_string(pass_id_) + "_";
+  // task_name_ = "task_" + std::to_string(task_id_) + "_segment_" + std::to_string(segment_id_);
+  std::string task_name_ = "welding_segment";
+  std::string task_control_frame_tech_model_ = "tcp_welding_gun_link";  // "welding_frames/task_control_frame";
+  double offset_z = 0.1;
+  cartesian_task_.init("welding_segment", "single_pass");
+  cartesian_task_.viaMotion("RRTConnect", 1.0);
+  cartesian_task_.approachRetreat("approach_start", task_control_frame_tech_model_, offset_z);
+  cartesian_task_.generateStart("start_state ", task_control_frame_tech_model_);
+  cartesian_task_.addStage("welding_motion ", task_control_frame_tech_model_, "RRTstar", 0.2);
+  cartesian_task_.approachRetreat("retreat_end", task_control_frame_tech_model_, -offset_z);
 
   /******************************************************
    *          Execution                                 *

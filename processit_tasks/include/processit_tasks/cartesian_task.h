@@ -20,9 +20,16 @@
 // #include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 // MTC
+// #include <moveit/task_constructor/stage_p.h>
 #include <moveit/task_constructor/task.h>
 #include <moveit/task_constructor/stages/current_state.h>
+#include <moveit/task_constructor/stages/fixed_state.h>
+#include <moveit/task_constructor/stages/connect.h>
+#include <moveit/task_constructor/stages/compute_ik.h>
+#include <moveit/task_constructor/stages/generate_pose.h>
+#include <moveit/task_constructor/stages/move_relative.h>
 #include <moveit/task_constructor/stages/move_to.h>
+#include <moveit/task_constructor/solvers/cartesian_path.h>
 #include <moveit/task_constructor/solvers/pipeline_planner.h>
 #include <moveit_task_constructor_msgs/action/execute_task_solution.hpp>
 
@@ -34,7 +41,7 @@ class CartesianTask
 {
 public:
   // Constructor
-  CartesianTask(rclcpp::Node::SharedPtr& node);
+  CartesianTask(const rclcpp::Node::SharedPtr& node, const moveit::task_constructor::TaskPtr& task);
 
   // Destructor
   ~CartesianTask() = default;
@@ -44,14 +51,16 @@ public:
 
   // Add current state
   void addCurrentState();
+  // void addFixedState(std::string group_state);
+  void viaMotion(std::string planner_id, double velocity);
 
-  // Adding a new stage
-  void addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose, std::string planner_id,
-                double velocity);
-
-  // Setting a stage offset
-  void setTaskTransformOffset(double x, double y, double z, double roll, double pitch, double yaw);
-  void setTaskTransformOffset(geometry_msgs::msg::Transform new_task_transform);
+  // Cartesian motion
+  void approachRetreat(const std::string stage_caption, const std::string task_control_frame,
+                       const double offset_approach_z);
+  void generateStart(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose,
+                     std::string task_control_frame);
+  void addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose, std::string task_control_frame,
+                std::string planner_id, double velocity);
 
   // Planning of the motion
   bool plan();
@@ -69,10 +78,7 @@ private:
   // Load the relevant parameters from the YAML file
   void loadParameters();
 
-  // Apply the prevoiusly set offset to the task transform
-  void applyTaskTransformOffset();
-
-  void setPlannerProperties(std::shared_ptr<moveit::task_constructor::solvers::PipelinePlanner>& pipeline_planner,
+  void setPlannerProperties(moveit::task_constructor::solvers::PipelinePlannerPtr& pipeline_planner,
                             std::string planner_id, double velocity);
 
   /*******
@@ -85,10 +91,16 @@ private:
    * task-related variables *
    **************************/
 
+  moveit::task_constructor::Stage* current_state_ptr_;  // Forward current_state on to pose generator
   std::string task_name_;
   std::string task_caption_;
   int task_id_;
   std::string planner_plugin_;
+  const std::string world_frame_ = "world";          // Default world frame
+  const std::string workpiece_frame_ = "workpiece";  // Default workpiece frame
+  // geometry_msgs::msg::PoseStamped start_frame_;
+  // geometry_msgs::msg::PoseStamped end_frame_;
+  // geometry_msgs::msg::PoseStamped interim_frame_;
 
   /***********************************
    * planner_interface configuration *
@@ -118,17 +130,19 @@ private:
   std::string free_space_planner_id_ = "RRTConnect";
   std::string constrained_planner_id_ = "RRTstar";
   std::string planner_id_property_name_ = "planner";
-  std::string path_constraints_name_ = "linear_system_constraints";  // OMPL Constrained with linear equations system
 
+  // for OMPL constrained planning
+  std::string path_constraints_name_ = "linear_system_constraints";  // OMPL Constrained with linear equations system
   // Allowed planning time [s] and maximum number of solutions
   int planning_time_free_space_ = 1;
   int planning_time_constrained_ = 5;
   int planning_time_collisions_ = 10;
   int max_solutions_ = 10;
 
-  // // Planning group and link names
-  std::string welding_group_name_;  //"welding_endeffector" // "welding_arm"
-  std::string welding_tcp_frame_;   //"welding_gun" // "welding_tcp"
+  // Planning group and link names
+  std::string arm_group_name_ = "manipulator";
+  std::string welding_group_name_ = "welding_endeffector";
+  std::string welding_tcp_frame_ = "tcp_welding_gun_link";
 
   // Execution
   rclcpp_action::Client<moveit_task_constructor_msgs::action::ExecuteTaskSolution>::SharedPtr execute_;
