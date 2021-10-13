@@ -46,7 +46,6 @@ bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 
   task_ = std::make_shared<moveit::task_constructor::Task>();
   node_ptr_ = node;
-  cartesian_task_ = processit_tasks::CartesianTask(node_ptr_, task_);
   return true;
 }
 
@@ -66,6 +65,26 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
                         "planning goal!");
   }
   auto motion_plan_req = (global_goal_handle->get_goal())->desired_motion_sequence.items[0].req;
+  geometry_msgs::msg::PoseStamped start_pose;
+  start_pose.header.frame_id = "world";
+  start_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
+  start_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
+  start_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
+  start_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
+  geometry_msgs::msg::PoseStamped goal_pose;
+  goal_pose.header.frame_id = "world";
+  goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
+  goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
+  goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
+  goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
+
+  // // Apply offset to get approach pose
+  // Eigen::Isometry3d goal;
+  // tf2::fromMsg(goal_pose.pose, goal);
+  // Eigen::Isometry3d approach_offset = Eigen::Isometry3d::Identity();
+  // approach_offset.translation().z() = -0.1;
+  // goal = goal * approach_offset;
+  // tf2::convert(goal, goal_pose.pose);
 
   // Set parameters required by the planning component
   node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planner_id", motion_plan_req.planner_id });
@@ -101,12 +120,13 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   std::string task_name_ = "welding_segment";
   std::string task_control_frame_tech_model_ = "tcp_welding_gun_link";  // "welding_frames/task_control_frame";
   double offset_z = 0.1;
-  cartesian_task_.init("welding_segment", "single_pass");
-  cartesian_task_.viaMotion("RRTConnect", 1.0);
-  cartesian_task_.approachRetreat("approach_start", task_control_frame_tech_model_, offset_z);
-  cartesian_task_.generateStart("start_state ", task_control_frame_tech_model_);
-  cartesian_task_.addStage("welding_motion ", task_control_frame_tech_model_, "RRTstar", 0.2);
-  cartesian_task_.approachRetreat("retreat_end", task_control_frame_tech_model_, -offset_z);
+  auto cartesian_task = processit_tasks::CartesianTask(node_ptr_, task_);
+  cartesian_task.init("welding_segment", "single_pass");
+  cartesian_task.viaMotion("RRTConnect", 1.0);
+  cartesian_task.approachRetreat("approach_start", task_control_frame_tech_model_, offset_z);
+  cartesian_task.generateStart("start_state ", start_pose, task_control_frame_tech_model_);
+  cartesian_task.addStage("welding_motion ", goal_pose, task_control_frame_tech_model_, "RRTstar", 0.2);
+  cartesian_task.approachRetreat("retreat_end", task_control_frame_tech_model_, -offset_z);
 
   /******************************************************
    *          Execution                                 *

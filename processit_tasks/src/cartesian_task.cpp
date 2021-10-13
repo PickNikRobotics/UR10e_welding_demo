@@ -1,6 +1,6 @@
 // MTC Welding IPA
+#include <moveit/planning_scene/planning_scene.h>
 #include <processit_tasks/cartesian_task.h>
-#include <rosparam_shortcuts/rosparam_shortcuts.h>
 
 namespace processit_tasks
 {
@@ -75,7 +75,7 @@ void CartesianTask::viaMotion(std::string planner_id, double velocity)
   Task& t = *task_;
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: viaMotion");
   // Create an instance of the planner and set its properties
-  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>();
+  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_);
   pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
   pipeline_planner->setPlannerId(free_space_planner_id_);
   pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
@@ -112,6 +112,72 @@ void CartesianTask::approachRetreat(const std::string stage_caption, const std::
   stage->setDirection(vec);
 
   // stage->insert(std::move(ik));
+  Task& t = *task_;
+  t.add(std::move(stage));
+}
+
+void CartesianTask::generateStart(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose,
+                                  std::string task_control_frame)
+{
+  RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: Add stage stage_offset");
+  // Create a stage with desired planner
+  auto stage = std::make_unique<stages::GeneratePose>("generate start pose");
+  stage->setPose(goal_pose);
+  stage->setMonitoredStage(current_state_ptr_);  // Hook into current state
+  // Compute IK
+  auto ik = std::make_unique<stages::ComputeIK>("start pose IK", std::move(stage));
+  // ik->insert(std::move(initial));
+  ik->setGroup(welding_group_name_);
+  // ik->setTargetPose(target_pose);
+  ik->properties().configureInitFrom(Stage::INTERFACE, { "target_pose" });
+  ik->properties().set("ignore_collisions", true);
+  // ik->setTimeout(5.0);
+  // ik->setMinSolutionDistance(0.0);
+  // ik->setMaxIKSolutions(100);
+
+  ik->setIKFrame(task_control_frame);
+  // ik->properties().configureInitFrom(Stage::PARENT, {"eef", "group"});
+  // ik->properties().configureInitFrom(Stage::INTERFACE, {"target_pose"});
+
+  // auto cl_cost{std::make_unique<cost::Clearance>()};
+  // cl_cost->cumulative = nh.param("cumulative", false); // sum up pairwise distances?
+  // cl_cost->with_world = nh.param("with_world", true);  // consider distance to world objects?
+  // ik->setCostTerm(std::move(cl_cost));
+
+  // stage->insert(std::move(ik));
+  Task& t = *task_;
+  t.add(std::move(ik));
+}
+
+/**
+ * @brief Adds a new stage to the task. Offset is defined through task_transform_.
+ *
+ * @param stage_caption How the stage is named
+ * @param goal_pose the goal pose to reach in this stage
+ * @param task_control_frame The name of the attached subframe to be controlled and used of IK
+ * @param planner_id The ID of the planner, e.g. "LIN"/"CIRC"/...
+ * @param velocity The velocity which the robot should have
+ */
+void CartesianTask::addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose,
+                             std::string task_control_frame, std::string planner_id, double velocity)
+{
+  RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: addStage");
+  // Create an instance of the planner and set its properties
+  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_);
+  setPlannerProperties(pipeline_planner, planner_id, velocity);
+
+  // Create a stage with desired planner
+  auto stage = std::make_unique<stages::MoveTo>(stage_caption, pipeline_planner);
+  stage->setGroup(welding_group_name_);
+  stage->setIKFrame(task_control_frame);
+  stage->setGoal(goal_pose);
+
+  if (planner_id != joint_space_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
+    stage->setTimeout(planning_time_constrained_);
+  else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
+    stage->setTimeout(planning_time_free_space_);
+
+  // Add the stage to the task
   Task& t = *task_;
   t.add(std::move(stage));
 }
@@ -201,72 +267,6 @@ void CartesianTask::setPlannerProperties(moveit::task_constructor::solvers::Pipe
   }
   else
     RCLCPP_ERROR_STREAM(LOGGER, "Planner plugin name not correctly set: " << planner_plugin_);
-}
-
-void CartesianTask::generateStart(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose,
-                                  std::string task_control_frame)
-{
-  RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: Add stage stage_offset");
-  // Create a stage with desired planner
-  auto stage = std::make_unique<stages::GeneratePose>("generate start pose");
-  stage->setPose(goal_pose);
-  stage->setMonitoredStage(current_state_ptr_);  // Hook into current state
-  // Compute IK
-  auto ik = std::make_unique<stages::ComputeIK>("start pose IK", std::move(stage));
-  // ik->insert(std::move(initial));
-  ik->setGroup(welding_group_name_);
-  // ik->setTargetPose(target_pose);
-  ik->properties().configureInitFrom(Stage::INTERFACE, { "target_pose" });
-  ik->properties().set("ignore_collisions", true);
-  // ik->setTimeout(5.0);
-  // ik->setMinSolutionDistance(0.0);
-  // ik->setMaxIKSolutions(100);
-
-  ik->setIKFrame(task_control_frame);
-  // ik->properties().configureInitFrom(Stage::PARENT, {"eef", "group"});
-  // ik->properties().configureInitFrom(Stage::INTERFACE, {"target_pose"});
-
-  // auto cl_cost{std::make_unique<cost::Clearance>()};
-  // cl_cost->cumulative = nh.param("cumulative", false); // sum up pairwise distances?
-  // cl_cost->with_world = nh.param("with_world", true);  // consider distance to world objects?
-  // ik->setCostTerm(std::move(cl_cost));
-
-  // stage->insert(std::move(ik));
-  Task& t = *task_;
-  t.add(std::move(ik));
-}
-
-/**
- * @brief Adds a new stage to the task. Offset is defined through task_transform_.
- *
- * @param stage_caption How the stage is named
- * @param goal_pose the goal pose to reach in this stage
- * @param task_control_frame The name of the attached subframe to be controlled and used of IK
- * @param planner_id The ID of the planner, e.g. "LIN"/"CIRC"/...
- * @param velocity The velocity which the robot should have
- */
-void CartesianTask::addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose,
-                             std::string task_control_frame, std::string planner_id, double velocity)
-{
-  RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: addStage");
-  // Create an instance of the planner and set its properties
-  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_);
-  setPlannerProperties(pipeline_planner, planner_id, velocity);
-
-  // Create a stage with desired planner
-  auto stage = std::make_unique<stages::MoveTo>(stage_caption, pipeline_planner);
-  stage->setGroup(welding_group_name_);
-  stage->setIKFrame(task_control_frame);
-  stage->setGoal(goal_pose);
-
-  if (planner_id != joint_space_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
-    stage->setTimeout(planning_time_constrained_);
-  else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
-    stage->setTimeout(planning_time_free_space_);
-
-  // Add the stage to the task
-  Task& t = *task_;
-  t.add(std::move(stage));
 }
 
 bool CartesianTask::plan()

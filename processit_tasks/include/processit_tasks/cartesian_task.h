@@ -4,12 +4,8 @@
 #include <string>
 #include <exception>
 
-// YAML
-#include <yaml-cpp/yaml.h>
-
 // ROS
 #include <rclcpp/rclcpp.hpp>
-#include <rosparam_shortcuts/rosparam_shortcuts.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 #include <geometry_msgs/msg/pose.h>
 #include <geometry_msgs/msg/transform.h>
@@ -75,9 +71,6 @@ private:
    * Functions *
    *************/
 
-  // Load the relevant parameters from the YAML file
-  void loadParameters();
-
   void setPlannerProperties(moveit::task_constructor::solvers::PipelinePlannerPtr& pipeline_planner,
                             std::string planner_id, double velocity);
 
@@ -140,8 +133,8 @@ private:
   int max_solutions_ = 10;
 
   // Planning group and link names
-  std::string arm_group_name_ = "manipulator";
-  std::string welding_group_name_ = "welding_endeffector";
+  std::string arm_group_name_ = "ur_manipulator";
+  std::string welding_group_name_ = "ur_manipulator";
   std::string welding_tcp_frame_ = "tcp_welding_gun_link";
 
   // Execution

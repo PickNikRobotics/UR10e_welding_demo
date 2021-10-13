@@ -40,8 +40,6 @@
 #include <moveit/global_planner/global_planner_interface.h>
 #include <moveit/task_constructor/task.h>
 
-#include <processit_tasks/cartesian_task.h>
-
 namespace hybrid_planning_demo
 {
 // Component node containing the global planner
@@ -57,6 +55,5 @@ public:
 private:
   moveit::task_constructor::TaskPtr task_;
   rclcpp::Node::SharedPtr node_ptr_;
-  processit_tasks::CartesianTask cartesian_task_;
 };
 }  // namespace hybrid_planning_demo
