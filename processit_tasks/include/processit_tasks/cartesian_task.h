@@ -88,7 +88,8 @@ private:
   std::string task_name_;
   std::string task_caption_;
   int task_id_;
-  std::string planner_plugin_;
+  std::string planner_plugin_ = "pilz_industrial_motion_planner::CommandPlanner";
+  std::string planning_pipeline_ = "pilz_industrial_motion_planner";
   const std::string world_frame_ = "world";          // Default world frame
   const std::string workpiece_frame_ = "workpiece";  // Default workpiece frame
   // geometry_msgs::msg::PoseStamped start_frame_;
@@ -107,7 +108,7 @@ private:
   double max_rot_vel_;
 
   // Maximum acceleration scaling
-  double max_acceleration_scaling_ = 1.0;
+  double max_acceleration_scaling_ = 0.2;
 
   // Step size
   double step_size_ = 0.01;

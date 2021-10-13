@@ -75,16 +75,17 @@ void CartesianTask::viaMotion(std::string planner_id, double velocity)
   Task& t = *task_;
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: viaMotion");
   // Create an instance of the planner and set its properties
-  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_);
-  pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
-  pipeline_planner->setPlannerId(free_space_planner_id_);
-  pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
-  pipeline_planner->setProperty("max_velocity_scaling_factor", 1.0);  // max_joint_velocity
+  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_, planning_pipeline_);
+  setPlannerProperties(pipeline_planner, planner_id, velocity);
+  // pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
+  // pipeline_planner->setPlannerId(free_space_planner_id_);
+  // pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
+  // pipeline_planner->setProperty("max_velocity_scaling_factor", 1.0);  // max_joint_velocity
 
   // setPlannerProperties(pipeline_planner, planner_id, velocity);
   auto connect = std::make_unique<stages::Connect>(
       "Move between processes", stages::Connect::GroupPlannerVector{ { arm_group_name_, pipeline_planner } });
-  connect->setTimeout(5.0);
+  // connect->setTimeout(5.0);
   // connect->init();
   // connect->properties().configureInitFrom(Stage::PARENT);
   t.add(std::move(connect));
@@ -163,7 +164,7 @@ void CartesianTask::addStage(std::string stage_caption, geometry_msgs::msg::Pose
 {
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: addStage");
   // Create an instance of the planner and set its properties
-  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_);
+  auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_, planning_pipeline_);
   setPlannerProperties(pipeline_planner, planner_id, velocity);
 
   // Create a stage with desired planner
@@ -234,15 +235,15 @@ void CartesianTask::setPlannerProperties(moveit::task_constructor::solvers::Pipe
                                        << trans_velocity_scaling_factor);
       }
     }
-    else if (velocity > 0.0)
+    else if (velocity >= 0.0001)  // Pilz error: Velocity scaling not in range [0.0001, 1]
     {
       pipeline_planner->setProperty("max_velocity_scaling_factor", velocity);
       RCLCPP_INFO_STREAM(LOGGER, "[CartesianTask instance]: Setting desired Maximum Joint velocity scaling factor: "
                                      << velocity);
     }
     else
-      RCLCPP_ERROR_STREAM(LOGGER,
-                          "[CartesianTask instance]: Desired velocity was not properly set (0 is not possible)");
+      RCLCPP_ERROR_STREAM(
+          LOGGER, "[CartesianTask instance]: Desired velocity was not properly set, scaling not in range [0.0001, 1]");
   }
   else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
   {

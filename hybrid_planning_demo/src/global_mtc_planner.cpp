@@ -51,6 +51,8 @@ bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 
 bool GlobalMTCPlannerComponent::reset()
 {
+  task_.reset();
+  task_ = std::make_shared<moveit::task_constructor::Task>();
   return true;
 }
 
@@ -122,10 +124,10 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   double offset_z = 0.1;
   auto cartesian_task = processit_tasks::CartesianTask(node_ptr_, task_);
   cartesian_task.init("welding_segment", "single_pass");
-  cartesian_task.viaMotion("RRTConnect", 1.0);
+  cartesian_task.viaMotion("PTP", 1.0);
   cartesian_task.approachRetreat("approach_start", task_control_frame_tech_model_, offset_z);
   cartesian_task.generateStart("start_state ", start_pose, task_control_frame_tech_model_);
-  cartesian_task.addStage("welding_motion ", goal_pose, task_control_frame_tech_model_, "RRTstar", 0.2);
+  cartesian_task.addStage("welding_motion ", goal_pose, task_control_frame_tech_model_, "LIN", 0.2);
   cartesian_task.approachRetreat("retreat_end", task_control_frame_tech_model_, -offset_z);
 
   /******************************************************
