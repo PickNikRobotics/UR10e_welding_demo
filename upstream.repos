@@ -15,7 +15,7 @@ repositories:
   moveit2:
     type: git
     # Temporary branch including Hybrid Planning and Pilz Planner port
-    url: https://github.com/henningkayser/moveit2.git
+    url: https://github.com/christianlandgraf/moveit2.git
     version: tmp-hybrid_planning_pilz
     # PR branch: https://github.com/ros-planning/moveit2/pull/488
     # version: feature/hybrid_planning

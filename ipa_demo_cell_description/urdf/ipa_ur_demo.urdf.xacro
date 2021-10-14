@@ -29,6 +29,7 @@
   <xacro:arg name="fake_sensor_commands" default="false" />
 
   <!-- Real robot hardware -->
+  <!-- TODO (christianlandgraf): Use ur_description as soon as PR#154 is merged -->
   <!-- <xacro:include filename="$(find ur_description)/urdf/ur.urdf.xacro" /> -->
   <!-- <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" /> -->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ur_macro.xacro" />
@@ -43,7 +44,8 @@
     safety_pos_margin="$(arg safety_pos_margin)"
     safety_k_position="$(arg safety_k_position)"
     use_fake_hardware="$(arg use_fake_hardware)"
-    fake_sensor_commands="$(arg fake_sensor_commands)" />
+    fake_sensor_commands="$(arg fake_sensor_commands)"
+    initial_positions="${dict(shoulder_pan_joint=0.86, shoulder_lift_joint=-1.93, elbow_joint=2.22, wrist_1_joint=-1.97, wrist_2_joint=-1.63, wrist_3_joint=0.72)}"/>
 
   <!-- Include the cell and attach it to the world-->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />
