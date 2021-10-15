@@ -58,11 +58,7 @@ public:
   void addStage(std::string stage_caption, geometry_msgs::msg::PoseStamped goal_pose, std::string task_control_frame,
                 std::string planner_id, double velocity);
 
-  // Planning of the motion
-  bool plan();
-
-  // Execution of the motion
-  bool execute();
+  void weld(geometry_msgs::msg::PoseStamped start_pose, geometry_msgs::msg::PoseStamped goal_pose);
 
   moveit::task_constructor::TaskPtr task_;
 
@@ -88,33 +84,33 @@ private:
   std::string task_name_;
   std::string task_caption_;
   int task_id_;
-  std::string planner_plugin_ = "pilz_industrial_motion_planner::CommandPlanner";
+  std::string planning_plugin_ = "pilz_industrial_motion_planner::CommandPlanner";
   std::string planning_pipeline_ = "pilz_industrial_motion_planner";
-  const std::string world_frame_ = "world";          // Default world frame
-  const std::string workpiece_frame_ = "workpiece";  // Default workpiece frame
-  // geometry_msgs::msg::PoseStamped start_frame_;
-  // geometry_msgs::msg::PoseStamped end_frame_;
-  // geometry_msgs::msg::PoseStamped interim_frame_;
+  std::string planner_id_ = "LIN";
+  const std::string world_frame_ = "world";    // Default world frame
+  std::string workpiece_frame_ = "workpiece";  // Default workpiece frame
 
   /***********************************
    * planner_interface configuration *
    ***********************************/
 
   // Cartesian velocity [m/s]
-  double cartesian_velocity_ = 0.02;
-  double via_velocity_ = 0.2;
+  double welding_velocity_;  // [cm/min], see velocity_convert_ in welding.h
+  double cartesian_velocity_;
+  double via_velocity_;
   double cartesian_rot_velocity_ = 1.57;
-  double max_trans_vel_;
-  double max_rot_vel_;
+  double max_trans_vel_ = 1.0;
+  double max_rot_vel_ = 9.42;
 
   // Maximum acceleration scaling
-  double max_acceleration_scaling_ = 0.2;
+  double max_acceleration_scaling_factor_;
 
   // Step size
   double step_size_ = 0.01;
   int num_planning_attempts_;                 //.01
   double goal_position_tolerance_ = 1e-4;     //.01
   double goal_orientation_tolerance_ = 1e-3;  //.01
+  double offset_welding_approach_z_;
 
   // Planner IDs
   std::string linear_planner_id_ = "LIN";
@@ -137,6 +133,8 @@ private:
   std::string arm_group_name_ = "ur_manipulator";
   std::string welding_group_name_ = "ur_manipulator";
   std::string welding_tcp_frame_ = "tcp_welding_gun_link";
+  std::string task_control_frame_ = "tcp_welding_gun_link";
+  std::string arm_home_pose_ = "ready";
 
   // Execution
   rclcpp_action::Client<moveit_task_constructor_msgs::action::ExecuteTaskSolution>::SharedPtr execute_;

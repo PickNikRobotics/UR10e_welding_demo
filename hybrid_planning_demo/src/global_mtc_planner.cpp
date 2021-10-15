@@ -23,13 +23,14 @@ const rclcpp::Logger LOGGER = rclcpp::get_logger("global_mtc_planner_component")
 const std::string PLANNING_PIPELINES_NS =
     "ompl.";  // See "https://github.com/ros-planning/moveit_task_constructor/pull/170/files#r719602378"
 const std::string PLAN_REQUEST_PARAM_NS = "plan_request_params.";
+const std::string WELDING_PARAM_NS = "welding_params.";
 const std::string UNDEFINED = "<undefined>";
 using namespace std::chrono_literals;
 using namespace moveit::task_constructor;
 
 bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 {
-  // Declare planning pipeline paramter
+  // Declare planning pipeline parameter
   node->declare_parameter<std::vector<std::string>>(PLANNING_PIPELINES_NS + "pipeline_names",
                                                     std::vector<std::string>({ "pilz_industrial_motion_planner" }));
   node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "namespace", UNDEFINED);
@@ -37,6 +38,7 @@ bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
                                        "pilz_industrial_motion_planner::CommandPlanner");
 
   // Declare PlanRequestParameters
+  node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "group_name", "ur_manipulator");
   node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planner_id", "LIN");
   node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planning_pipeline", "pilz_industrial_motion_planner");
   node->declare_parameter<int>(PLAN_REQUEST_PARAM_NS + "planning_attempts", 5);
@@ -80,15 +82,8 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
   goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
 
-  // // Apply offset to get approach pose
-  // Eigen::Isometry3d goal;
-  // tf2::fromMsg(goal_pose.pose, goal);
-  // Eigen::Isometry3d approach_offset = Eigen::Isometry3d::Identity();
-  // approach_offset.translation().z() = -0.1;
-  // goal = goal * approach_offset;
-  // tf2::convert(goal, goal_pose.pose);
-
   // Set parameters required by the planning component
+  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "group_name", motion_plan_req.group_name });
   node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planner_id", motion_plan_req.planner_id });
   node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_pipeline", motion_plan_req.pipeline_id });
   node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_attempts", motion_plan_req.num_planning_attempts });
@@ -103,7 +98,6 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
   planning_solution.group_name = "ur_manipulator";
 
-  // task_ = std::make_shared<moveit::task_constructor::Task>();
   moveit::task_constructor::Task& t = *task_;
   t.stages()->setName("global_mtc_task");
   t.loadRobotModel(node_ptr_);
@@ -123,12 +117,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   std::string task_control_frame_tech_model_ = "tcp_welding_gun_link";  // "welding_frames/task_control_frame";
   double offset_z = 0.1;
   auto cartesian_task = processit_tasks::CartesianTask(node_ptr_, task_);
-  cartesian_task.init("welding_segment", "single_pass");
-  cartesian_task.viaMotion("PTP", 1.0);
-  cartesian_task.approachRetreat("approach_start", task_control_frame_tech_model_, offset_z);
-  cartesian_task.generateStart("start_state ", start_pose, task_control_frame_tech_model_);
-  cartesian_task.addStage("welding_motion ", goal_pose, task_control_frame_tech_model_, "LIN", 0.2);
-  cartesian_task.approachRetreat("retreat_end", task_control_frame_tech_model_, -offset_z);
+  cartesian_task.weld(start_pose, goal_pose);
 
   /******************************************************
    *          Execution                                 *

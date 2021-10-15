@@ -4,12 +4,28 @@
 
 namespace processit_tasks
 {
+const std::string PLANNING_PIPELINES_NS =
+    "ompl.";  // See "https://github.com/ros-planning/moveit_task_constructor/pull/170/files#r719602378"
+const std::string PLAN_REQUEST_PARAM_NS = "plan_request_params.";
+const std::string WELDING_PARAM_NS = "welding_params.";
 using namespace moveit::task_constructor;
 const rclcpp::Logger LOGGER = rclcpp::get_logger("cartesian_task");
 
 CartesianTask::CartesianTask(const rclcpp::Node::SharedPtr& node, const moveit::task_constructor::TaskPtr& task)
 {
   node_ = node;
+  // Declare WeldingParameters
+  node_->declare_parameter<std::string>(WELDING_PARAM_NS + "arm_group_name", "ur_manipulator");
+  node_->declare_parameter<std::string>(WELDING_PARAM_NS + "welding_tcp_frame", "tcp_welding_gun_link");
+  node_->declare_parameter<std::string>(WELDING_PARAM_NS + "task_control_frame", "welding_frames/task_control_frame");
+  node_->declare_parameter<std::string>(WELDING_PARAM_NS + "arm_home_pose", "ready");
+  node_->declare_parameter<std::string>(WELDING_PARAM_NS + "workpiece_frame", "workpiece");
+  node_->declare_parameter<double>(WELDING_PARAM_NS + "welding_velocity", 0.0);    // [cm/min], see velocity_convert_
+  node_->declare_parameter<double>(WELDING_PARAM_NS + "cartesian_velocity", 0.0);  // [m/s]
+  node_->declare_parameter<double>(WELDING_PARAM_NS + "via_velocity", 0.0);        // velocity scaling factor [0.0001;1]
+  node_->declare_parameter<double>(WELDING_PARAM_NS + "offset_welding_approach_z", 0.0);
+  node_->declare_parameter<double>(WELDING_PARAM_NS + "goal_orientation_tolerance", 0.0);
+
   execute_ = rclcpp_action::create_client<moveit_task_constructor_msgs::action::ExecuteTaskSolution>(
       node_, "execute_task_solution");
   task_ = task;
@@ -20,8 +36,25 @@ void CartesianTask::init(std::string task_name, std::string task_caption)
   task_name_ = task_name;
   task_caption_ = task_caption;
 
+  node_->get_parameter<std::string>(PLANNING_PIPELINES_NS + "planning_plugin", planning_plugin_);
+  node_->get_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planner_id", planner_id_);
+  node_->get_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planning_pipeline", planning_pipeline_);
+  node_->get_parameter<double>(PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor",
+                               max_acceleration_scaling_factor_);
+  // Load parameter & initialize member variables
+  node_->get_parameter<std::string>("arm_group_name", arm_group_name_);
+  node_->get_parameter<std::string>("welding_tcp_frame", welding_tcp_frame_);
+  node_->get_parameter<std::string>("task_control_frame", task_control_frame_);
+  node_->get_parameter<std::string>("arm_home_pose", arm_home_pose_);
+  node_->get_parameter<std::string>("workpiece_frame", workpiece_frame_);
+  node_->get_parameter<double>("welding_velocity", welding_velocity_);      // [cm/min], see velocity_convert_
+  node_->get_parameter<double>("cartesian_velocity", cartesian_velocity_);  // [m/s]
+  node_->get_parameter<double>("via_velocity", via_velocity_);              // velocity scaling factor [0.0001;1]
+  node_->get_parameter<double>("offset_welding_approach_z", offset_welding_approach_z_);
+  node_->get_parameter<double>("goal_orientation_tolerance", goal_orientation_tolerance_);
+
   // loadParameters();
-  // nh_.param<std::string>("/move_group/planning_plugin", planner_plugin_, "");
+  // nh_.param<std::string>("/move_group/planning_plugin", planning_plugin_, "");
   // nh_.param<double>("/robot_description_planning/cartesian_limits/max_trans_vel", max_trans_vel_, 0.0);
   // nh_.param<double>("/robot_description_planning/cartesian_limits/max_rot_vel", max_rot_vel_, 0.0);
 
@@ -57,19 +90,6 @@ void CartesianTask::addCurrentState()
   }
 }
 
-//     void CartesianTask::addFixedState(std::string group_state)
-// {
-//         Task &t = *task_;
-//         RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: addFixedState");
-//         auto scene = std::make_shared<planning_scene::PlanningScene>(t.getRobotModel());
-//         auto &state = scene->getCurrentStateNonConst();
-//         state.setToDefaultValues(state.getJointModelGroup(arm_group_name_), group_state);
-
-//         auto fixed = std::make_unique<stages::FixedState>("final state");
-//         fixed->setState(scene);
-//         t.add(std::move(fixed));
-//     }
-
 void CartesianTask::viaMotion(std::string planner_id, double velocity)
 {
   Task& t = *task_;
@@ -77,14 +97,9 @@ void CartesianTask::viaMotion(std::string planner_id, double velocity)
   // Create an instance of the planner and set its properties
   auto pipeline_planner = std::make_shared<solvers::PipelinePlanner>(node_, planning_pipeline_);
   setPlannerProperties(pipeline_planner, planner_id, velocity);
-  // pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
-  // pipeline_planner->setPlannerId(free_space_planner_id_);
-  // pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
-  // pipeline_planner->setProperty("max_velocity_scaling_factor", 1.0);  // max_joint_velocity
 
-  // setPlannerProperties(pipeline_planner, planner_id, velocity);
   auto connect = std::make_unique<stages::Connect>(
-      "Move between processes", stages::Connect::GroupPlannerVector{ { arm_group_name_, pipeline_planner } });
+      "free-space_motion", stages::Connect::GroupPlannerVector{ { arm_group_name_, pipeline_planner } });
   // connect->setTimeout(5.0);
   // connect->init();
   // connect->properties().configureInitFrom(Stage::PARENT);
@@ -97,12 +112,12 @@ void CartesianTask::approachRetreat(const std::string stage_caption, const std::
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: approachRetreat");
   // Create a stage with desired planner
   auto cartesian_interpolation = std::make_shared<solvers::CartesianPath>();
-  cartesian_interpolation->setMaxVelocityScaling(0.2);
-  cartesian_interpolation->setMaxAccelerationScaling(max_acceleration_scaling_);
-  cartesian_interpolation->setStepSize(.01);
+  cartesian_interpolation->setMaxVelocityScaling(cartesian_velocity_);
+  cartesian_interpolation->setMaxAccelerationScaling(max_acceleration_scaling_factor_);
+  cartesian_interpolation->setStepSize(step_size_);
   auto stage = std::make_unique<stages::MoveRelative>(stage_caption, cartesian_interpolation);
   stage->properties().set("marker_ns", "stage_caption");
-  // stage->setIKFrame(task_control_frame);
+  stage->setIKFrame(task_control_frame_);
   stage->setGroup(welding_group_name_);
   // stage->setMinMaxDistance(offset_approach_z, offset_approach_z * 1.1);
 
@@ -112,7 +127,6 @@ void CartesianTask::approachRetreat(const std::string stage_caption, const std::
   vec.vector.z = offset_approach_z;
   stage->setDirection(vec);
 
-  // stage->insert(std::move(ik));
   Task& t = *task_;
   t.add(std::move(stage));
 }
@@ -173,9 +187,9 @@ void CartesianTask::addStage(std::string stage_caption, geometry_msgs::msg::Pose
   stage->setIKFrame(task_control_frame);
   stage->setGoal(goal_pose);
 
-  if (planner_id != joint_space_planner_id_ && planner_plugin_ == "ompl_interface/OMPLPlanner")
+  if (planner_id != joint_space_planner_id_ && planning_plugin_ == "ompl_interface/OMPLPlanner")
     stage->setTimeout(planning_time_constrained_);
-  else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
+  else if (planning_plugin_ == "ompl_interface/OMPLPlanner")
     stage->setTimeout(planning_time_free_space_);
 
   // Add the stage to the task
@@ -189,9 +203,9 @@ void CartesianTask::setPlannerProperties(moveit::task_constructor::solvers::Pipe
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: setPlannerProperties");
   pipeline_planner->setProperty("step_size", step_size_);
   pipeline_planner->setProperty("goal_joint_tolerance", 1e-5);
-  if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
+  if (planning_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
   {
-    pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
+    pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_factor_);
     pipeline_planner->setPlannerId(planner_id);
     if (planner_id != joint_space_planner_id_)
     {
@@ -245,12 +259,12 @@ void CartesianTask::setPlannerProperties(moveit::task_constructor::solvers::Pipe
       RCLCPP_ERROR_STREAM(
           LOGGER, "[CartesianTask instance]: Desired velocity was not properly set, scaling not in range [0.0001, 1]");
   }
-  else if (planner_plugin_ == "ompl_interface/OMPLPlanner")
+  else if (planning_plugin_ == "ompl_interface/OMPLPlanner")
   {
     if (planner_id == joint_space_planner_id_)
     {
       pipeline_planner->setPlannerId(free_space_planner_id_);
-      pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
+      pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_factor_);
       pipeline_planner->setProperty("max_velocity_scaling_factor", velocity);  // max_joint_velocity
     }
     else
@@ -267,47 +281,17 @@ void CartesianTask::setPlannerProperties(moveit::task_constructor::solvers::Pipe
     // pipeline_planner->setProperty(planner_id_property_name_, constrained_planner_id_);
   }
   else
-    RCLCPP_ERROR_STREAM(LOGGER, "Planner plugin name not correctly set: " << planner_plugin_);
+    RCLCPP_ERROR_STREAM(LOGGER, "Planner plugin name not correctly set: " << planning_plugin_);
 }
 
-bool CartesianTask::plan()
+void CartesianTask::weld(geometry_msgs::msg::PoseStamped start_pose, geometry_msgs::msg::PoseStamped goal_pose)
 {
-  RCLCPP_INFO(LOGGER, "Start searching for task solutions");
-  //   ros::NodeHandle pnh("~");
-  //   int max_solutions = pnh.param<int>("max_solutions", max_solutions_);
-
-  try
-  {
-    task_->plan(max_solutions_);
-  }
-  catch (InitStageException& e)
-  {
-    RCLCPP_ERROR_STREAM(LOGGER, "Initialization failed");
-    return false;
-  }
-  if (task_->numSolutions() == 0)
-  {
-    RCLCPP_ERROR_STREAM(LOGGER, "Planning failed, no solutions found");
-    return false;
-  }
-  return true;
-}
-
-bool CartesianTask::execute()
-{
-  RCLCPP_INFO(LOGGER, "Executing solution trajectory");
-  moveit_task_constructor_msgs::action::ExecuteTaskSolution::Goal execute_goal;
-  task_->solutions().front()->fillMessage(execute_goal.solution);
-  auto execute_future = execute_->async_send_goal(execute_goal);
-  execute_future.wait();
-
-  if (execute_future.get()->get_status() != rclcpp_action::GoalStatus::STATUS_SUCCEEDED)
-  {
-    RCLCPP_ERROR_STREAM(LOGGER, "Task execution failed");
-    return false;
-  }
-
-  return true;
+  init("welding_segment", "single_pass");
+  viaMotion(joint_space_planner_id_, via_velocity_);
+  approachRetreat("approach_start", task_control_frame_, offset_welding_approach_z_);
+  generateStart("start_state ", start_pose, task_control_frame_);
+  addStage("welding_motion ", goal_pose, task_control_frame_, linear_planner_id_, welding_velocity_);
+  approachRetreat("retreat_end", task_control_frame_, -offset_welding_approach_z_);
 }
 
 }  // namespace processit_tasks
