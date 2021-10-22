@@ -195,6 +195,7 @@ void PluginTaskDescription::loadTaskDescription(
 
         // Transform to world frame
         manufacturingFrameStart = workpiece_pose.matrix() * manufacturingFrameStart;
+        manufacturingFrameCenter = workpiece_pose.matrix() * manufacturingFrameCenter;
         manufacturingFrameEnd = workpiece_pose.matrix() * manufacturingFrameEnd;
 
         // Rotation of the point
@@ -214,10 +215,10 @@ void PluginTaskDescription::loadTaskDescription(
         // Add a line (cube) connecting both points in direction of y axis (along the seam)
         // // Add a line (cube) connecting both points
         // // In direction of y axis (along the seam)
-        // double a = M_PI * 0.5;
-        // Eigen::Quaternion<double> factor(cos(a / 2), sin(a / 2), 0, 0);
-        // Eigen::Quaternion<double> q_line = q * factor;
-        // int_marker_id_line = addLineMarker(seam_count, unit_scaling * segment_length, positionVectorCenter, q_line);
+        double a = M_PI * 0.5;
+        Eigen::Quaternion<double> factor(cos(a / 2), sin(a / 2), 0, 0);
+        Eigen::Quaternion<double> q_line = q * factor;
+        auto future_line = addLineMarker(seam_count, unit_scaling * segment_length, positionVectorCenter, q_line);
 
         // TODO Transform to workpiece frame
 
