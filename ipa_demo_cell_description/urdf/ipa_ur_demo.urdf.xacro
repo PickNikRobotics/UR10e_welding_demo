@@ -50,20 +50,18 @@
   <!-- Include the cell and attach it to the world-->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />
   <link name="world" />
-  <xacro:ipa_demo_env
-    prefix=""
-    use_fake_hardware="$(arg use_fake_hardware)" />
+  <xacro:ipa_demo_env prefix="" />
   <joint name="demo_env_joint" type="fixed">
     <parent link="world" />
     <child link="env_link" />
-    <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
 
   <!-- Attach UR to environment -->
   <joint name="robot_platform_joint" type="fixed">
     <parent link="env_link" />
     <child link="base_link" />
-    <origin xyz="-0.350 0.766 0" rpy="-${pi/2} -${pi/2} 0" />
+    <origin xyz="-0.350 0 0.813" rpy="0 0 ${-pi/2}" />
   </joint>
 
   <!-- Sensor calibration -->
