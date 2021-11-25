@@ -27,12 +27,12 @@
   <xacro:arg name="safety_k_position" default="20"/>
   <xacro:arg name="use_fake_hardware" default="false" />
   <xacro:arg name="fake_sensor_commands" default="false" />
+  <xacro:arg name="headless_mode" default="false" />
+  <xacro:arg name="initial_positions_file" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/ros2_control_initial_positions.yaml"/>
+  <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
 
   <!-- Real robot hardware -->
-  <!-- TODO (christianlandgraf): Use ur_description as soon as PR#154 is merged -->
-  <!-- <xacro:include filename="$(find ur_description)/urdf/ur.urdf.xacro" /> -->
-  <!-- <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" /> -->
-  <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ur_macro.xacro" />
+  <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
   <xacro:ur_robot
     prefix="$(arg prefix)"
     joint_limits_parameters_file="$(arg joint_limit_params)"
@@ -45,7 +45,8 @@
     safety_k_position="$(arg safety_k_position)"
     use_fake_hardware="$(arg use_fake_hardware)"
     fake_sensor_commands="$(arg fake_sensor_commands)"
-    initial_positions="${dict(shoulder_pan_joint=0.86, shoulder_lift_joint=-1.93, elbow_joint=2.22, wrist_1_joint=-1.97, wrist_2_joint=-1.63, wrist_3_joint=0.72)}"/>
+    headless_mode="$(arg headless_mode)"
+    initial_positions="${load_yaml(initial_positions_file)}" />
 
   <!-- Include the cell and attach it to the world-->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />
