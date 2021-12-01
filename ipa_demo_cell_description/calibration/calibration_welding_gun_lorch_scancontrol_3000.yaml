@@ -7,18 +7,18 @@ flange_welding_gun:
   pitch: 0
   yaw: !degrees 0
 # Welding Gun TCP calibration
-tcp_welding_gun: # Real world / Sim values
-  x: 0.00097 # 0.000
-  y: -0.00332 # 0.00358
-  z: 0.46916 # 0.4634
+tcp_welding_gun:
+  x: 0.00132
+  y: -0.00363
+  z: 0.42954
   roll: !degrees 180.0
   pitch: !degrees -135.0
   yaw: !degrees -90.0
 # Sensor TCP calibration
 tcp_sensor:
-  x:  -0.1191881
-  y:  0.1537143
-  z:  0.3159036
-  roll: !degrees 22.1
-  pitch: !degrees -44.857
-  yaw: !degrees 89.129
+  x:  -0.1246213
+  y:  0.1513277
+  z:  0.2797436
+  roll: !degrees 23.401
+  pitch: !degrees -44.584
+  yaw: !degrees 89.016
