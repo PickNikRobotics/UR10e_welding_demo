@@ -30,6 +30,7 @@
   <xacro:arg name="headless_mode" default="false" />
   <xacro:arg name="initial_positions_file" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/ros2_control_initial_positions.yaml"/>
   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
+  <xacro:arg name="use_tool_communication" default="false" />
 
   <!-- Real robot hardware -->
   <xacro:include filename="$(find ur_description)/urdf/ur_macro.xacro" />
@@ -46,7 +47,8 @@
     use_fake_hardware="$(arg use_fake_hardware)"
     fake_sensor_commands="$(arg fake_sensor_commands)"
     headless_mode="$(arg headless_mode)"
-    initial_positions="${load_yaml(initial_positions_file)}" />
+    initial_positions="${load_yaml(initial_positions_file)}"
+    use_tool_communication="$(arg use_tool_communication)"/>
 
   <!-- Include the cell and attach it to the world-->
   <xacro:include filename="$(find ipa_demo_cell_description)/urdf/ipa_demo_env.urdf.xacro" />

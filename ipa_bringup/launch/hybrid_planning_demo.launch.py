@@ -290,6 +290,15 @@ def generate_launch_description():
         [FindPackageShare(description_package), "rviz", "view_robot.rviz"]
     )
 
+    # define update rate
+    update_rate_config_file = PathJoinSubstitution(
+        [
+            FindPackageShare(runtime_config_package),
+            "config",
+            "update_rate.yaml",
+        ]
+    )
+
     # MoveIt Configuration
     robot_description_semantic_content = Command(
         [
@@ -421,7 +430,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_description, robot_controllers],
+        parameters=[robot_description, update_rate_config_file, robot_controllers],
         output={
             "stdout": "screen",
             "stderr": "screen",

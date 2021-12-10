@@ -218,28 +218,25 @@ public:
     auto result = client->async_send_request(request);
     response = result.get();
 
-    int i = 0;
     int no_seams = response->weld_seams.size();
-    goal_motion_request.goal_constraints.resize(no_seams);
+    goal_motion_request.reference_trajectories.resize(1);
+    goal_motion_request.reference_trajectories[0].cartesian_trajectory.resize(no_seams);
 
     for (auto const& weld_seam : response->weld_seams)
     {
+      moveit_msgs::msg::CartesianTrajectory cartesian_trajectory;
+      cartesian_trajectory.points.resize(2);
+
       for (auto const& pose : weld_seam.poses)
       {
         RCLCPP_INFO(LOGGER, "Weld seam position [x,y,z]: %f, %f, %f", pose.position.x, pose.position.y, pose.position.z);
 
         // Add poses to motion plan request
-        moveit_msgs::msg::PositionConstraint position_constraint;
-        position_constraint.target_point_offset.x = pose.position.x;
-        position_constraint.target_point_offset.y = pose.position.y;
-        position_constraint.target_point_offset.z = pose.position.z;
-        goal_motion_request.goal_constraints[0].position_constraints.push_back(position_constraint);
-
-        moveit_msgs::msg::OrientationConstraint orientation_constraint;
-        orientation_constraint.orientation = pose.orientation;
-        goal_motion_request.goal_constraints[0].orientation_constraints.push_back(orientation_constraint);
+        moveit_msgs::msg::CartesianTrajectoryPoint cartesian_trajectory_point;
+        cartesian_trajectory_point.point.pose = pose;
+        cartesian_trajectory.points.push_back(cartesian_trajectory_point);
       }
-      i++;
+      goal_motion_request.reference_trajectories[0].cartesian_trajectory.push_back(cartesian_trajectory);
     }
 
     // goal_motion_request.goal_constraints.resize(1);
