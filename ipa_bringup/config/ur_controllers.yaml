@@ -22,10 +22,13 @@ controller_manager:
     forward_velocity_controller:
       type: velocity_controllers/JointGroupVelocityController
 
+    forward_position_controller:
+      type: position_controllers/JointGroupPositionController
+
 
 speed_scaling_state_broadcaster:
   ros__parameters:
-    state_publish_rate: 100.0
+    state_publish_rate: 9999999999999999.0
 
 
 force_torque_sensor_broadcaster:
@@ -56,7 +59,7 @@ joint_trajectory_controller:
     state_interfaces:
       - position
       - velocity
-    state_publish_rate: 100.0
+    state_publish_rate: 9999999999999999.0
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:
@@ -84,7 +87,7 @@ scaled_joint_trajectory_controller:
     state_interfaces:
       - position
       - velocity
-    state_publish_rate: 100.0
+    state_publish_rate: 9999999999999999.0
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
     constraints:
@@ -107,3 +110,13 @@ forward_velocity_controller:
       - wrist_2_joint
       - wrist_3_joint
     interface_name: velocity
+
+forward_position_controller:
+  ros__parameters:
+    joints:
+      - shoulder_pan_joint
+      - shoulder_lift_joint
+      - elbow_joint
+      - wrist_1_joint
+      - wrist_2_joint
+      - wrist_3_joint
