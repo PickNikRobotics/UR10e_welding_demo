@@ -220,12 +220,10 @@ public:
 
     int no_seams = response->weld_seams.size();
     goal_motion_request.reference_trajectories.resize(1);
-    goal_motion_request.reference_trajectories[0].cartesian_trajectory.resize(no_seams);
 
     for (auto const& weld_seam : response->weld_seams)
     {
       moveit_msgs::msg::CartesianTrajectory cartesian_trajectory;
-      cartesian_trajectory.points.resize(2);
 
       for (auto const& pose : weld_seam.poses)
       {
