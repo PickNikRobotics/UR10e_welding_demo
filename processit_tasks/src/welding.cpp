@@ -120,7 +120,7 @@ void Welding::approach()
     geometry_msgs::msg::Transform stage_offset;
     stage_offset.translation.z = -distance_convert_ * offset_welding_approach_z_;
     // Hack because robot configuration change with Pilz PTP works bad
-    if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
+    if (planner_plugin_ == "pilz_industrial_motion_planner/CommandPlanner")
       cartesian_task_.addStage("Approach path", task_name_ + "_start", "ManufacturingToTaskFrame", stage_offset,
                                linear_planner_id_, via_velocity_);
     else
@@ -133,7 +133,7 @@ void Welding::approach()
     task_transform.translation.z -= distance_convert_ * offset_welding_approach_z_;
     cartesian_task_.setTaskTransformOffset(task_transform);
     // Hack because robot configuration change with Pilz PTP works bad
-    if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
+    if (planner_plugin_ == "pilz_industrial_motion_planner/CommandPlanner")
       cartesian_task_.addStage("Approach path", task_name_ + "_start", linear_planner_id_, via_velocity_);
     else
       cartesian_task_.addStage("Approach path", task_name_ + "_start", joint_space_planner_id_, via_max_joint_velocity_);
@@ -320,7 +320,7 @@ void Welding::weldFillet(int task_id)
   approach();
   weld();
   // Retrieve only required if no collision-free planner
-  if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
+  if (planner_plugin_ == "pilz_industrial_motion_planner/CommandPlanner")
     retrieve();
 }
 
