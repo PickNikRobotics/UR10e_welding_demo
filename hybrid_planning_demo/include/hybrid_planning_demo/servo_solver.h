@@ -46,7 +46,7 @@
 
 namespace hybrid_planning_demo
 {
-class ServoSolver : public moveit_hybrid_planning::LocalConstraintSolverInterface
+class ServoSolver : public moveit::hybrid_planning::LocalConstraintSolverInterface
 {
 public:
   bool initialize(const rclcpp::Node::SharedPtr& node,

@@ -47,7 +47,7 @@
 #include <moveit/kinematic_constraints/utils.h>
 #include <moveit/robot_state/conversions.h>
 
-#include <moveit_msgs/action/hybrid_planning.hpp>
+#include <moveit_msgs/action/hybrid_planner.hpp>
 #include <moveit_msgs/msg/display_robot_state.hpp>
 #include <moveit_msgs/msg/motion_plan_response.hpp>
 #include <moveit_msgs/msg/position_constraint.hpp>

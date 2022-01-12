@@ -140,4 +140,4 @@ double SimpleServoSampler::getTrajectoryProgress(const moveit::core::RobotState&
 
 #include <pluginlib/class_list_macros.hpp>
 
-PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::SimpleServoSampler, moveit_hybrid_planning::TrajectoryOperatorInterface);
+PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::SimpleServoSampler, moveit::hybrid_planning::TrajectoryOperatorInterface);

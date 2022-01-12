@@ -65,7 +65,7 @@ bool ServoSolver::initialize(const rclcpp::Node::SharedPtr& node,
       "/joint_trajectory_controller/joint_trajectory", 10);
 
   // Get Servo Parameters
-  servo_parameters_ = moveit_servo::ServoParameters::makeServoParameters(node_handle_, LOGGER);
+  servo_parameters_ = moveit_servo::ServoParameters::makeServoParameters(node_handle_);
   if (!servo_parameters_)
   {
     RCLCPP_FATAL(LOGGER, "Failed to load the servo parameters");

@@ -14,32 +14,14 @@ repositories:
     version: ros2
   moveit2:
     type: git
-    # Temporary branch including Hybrid Planning and Pilz Planner port
-    url: https://github.com/christianlandgraf/moveit2.git
-    version: tmp-hybrid_planning_pilz
-    # PR branch: https://github.com/ros-planning/moveit2/pull/488
-    # version: feature/hybrid_planning
-    # TODO(henningkayser) switch to upstream when merged
-    # version: main
+    url: https://github.com/ros-planning/moveit2.git
+    version: main
   moveit_msgs:
-    type: git
-    # Temporary branch (rebased on moveit_msgs:ros2 branch)
-    url: https://github.com/henningkayser/moveit_msgs.git
-    version: hybrid_planning
-    # PR branch: https://github.com/ros-planning/moveit_msgs/pull/114
-    # url: https://github.com/sjahr/moveit_msgs.git
-    # TODO(henningkayser): Switch back to upstream when merged
-    # url: https://github.com/ros-planning/moveit_msgs.git
-    # version: ros2
+    url: https://github.com/ros-planning/moveit_msgs.git
+    version: ros2
   moveit_resources:
-    type: git
-    # WIP branch for Pilz Planner Port
-    url: https://github.com/henningkayser/moveit_resources.git
-    version: pr-port_prbt_packages
-    # TODO(henningkayser): Switch back to upstream
-    # url: https://github.com/ros-planning/moveit_resources.git
-    # version: ros2
-    # Pilz Planner config
+    url: https://github.com/ros-planning/moveit_resources.git
+    version: ros2
   moveit_task_constructor:
     type: git
     # PR branch: https://github.com/ros-planning/moveit_task_constructor/pull/170
