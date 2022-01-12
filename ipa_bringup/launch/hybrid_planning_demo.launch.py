@@ -454,6 +454,9 @@ def launch_setup(context, *args, **kwargs):
     ##############################
 
     # Load params
+    common_hybrid_planning_param = load_yaml(
+        "hybrid_planning_demo", "config/common_hybrid_planning_params.yaml"
+    )
     global_planner_param = load_yaml(
         "hybrid_planning_demo", "config/global_planner.yaml"
     )
@@ -468,7 +471,7 @@ def launch_setup(context, *args, **kwargs):
         name="hybrid_planning_container",
         namespace="/",
         package="rclcpp_components",
-        executable="component_container",
+        executable="component_container_mt",
         composable_node_descriptions=[
             ComposableNode(
                 package="moveit_hybrid_planning",
@@ -477,6 +480,7 @@ def launch_setup(context, *args, **kwargs):
                 # plugin="hybrid_planning_demo::GlobalMTCPlannerComponent",
                 name="global_planner",
                 parameters=[
+                    common_hybrid_planning_param,
                     global_planner_param,
                     robot_description,
                     robot_description_semantic,
@@ -495,6 +499,7 @@ def launch_setup(context, *args, **kwargs):
                 plugin="moveit::hybrid_planning::LocalPlannerComponent",
                 name="local_planner",
                 parameters=[
+                    common_hybrid_planning_param,
                     local_planner_param,
                     robot_description,
                     robot_description_semantic,
@@ -506,7 +511,10 @@ def launch_setup(context, *args, **kwargs):
                 package="moveit_hybrid_planning",
                 plugin="moveit::hybrid_planning::HybridPlanningManager",
                 name="hybrid_planning_manager",
-                parameters=[hybrid_planning_manager_param],
+                parameters=[
+                    common_hybrid_planning_param,
+                    hybrid_planning_manager_param,
+                ],
             ),
         ],
         output="screen",
@@ -519,7 +527,12 @@ def launch_setup(context, *args, **kwargs):
         name="hybrid_planning_test_node",
         output="screen",
         # prefix=["xterm -e gdb -ex run --args"],
-        parameters=[robot_description, robot_description_semantic, kinematics_yaml],
+        parameters=[
+            common_hybrid_planning_param,
+            robot_description,
+            robot_description_semantic,
+            kinematics_yaml,
+        ],
     )
 
     ##############################
