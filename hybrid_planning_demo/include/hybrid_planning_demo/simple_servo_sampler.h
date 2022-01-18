@@ -43,7 +43,7 @@
 
 namespace hybrid_planning_demo
 {
-class SimpleServoSampler : public moveit_hybrid_planning::TrajectoryOperatorInterface
+class SimpleServoSampler : public moveit::hybrid_planning::TrajectoryOperatorInterface
 {
 public:
   bool initialize(const rclcpp::Node::SharedPtr& node, const moveit::core::RobotModelConstPtr& robot_model,

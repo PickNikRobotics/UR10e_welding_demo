@@ -145,6 +145,18 @@ def generate_launch_description():
             description="Folder of workpiece to load",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_dashboard_client", default_value="true", description="Launch RViz?"
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_tool_communication",
+            default_value="false",
+            description="Only available for e series!",
+        )
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -160,6 +172,8 @@ def generate_launch_description():
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
     # Demo Arguments
     workpiece_name = LaunchConfiguration("workpiece_name")
 
@@ -252,6 +266,9 @@ def generate_launch_description():
             " ",
             "fake_sensor_commands:=",
             fake_sensor_commands,
+            " ",
+            "use_tool_communication:=",
+            use_tool_communication,
             " ",
         ]
     )

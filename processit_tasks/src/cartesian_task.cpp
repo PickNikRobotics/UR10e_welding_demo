@@ -80,7 +80,7 @@ void CartesianTask::setPlannerProperties(
 {
   RCLCPP_DEBUG_STREAM(LOGGER, "[CartesianTask instance]: setPlannerProperties");
   pipeline_planner->setProperty("step_size", step_size_);
-  if (planner_plugin_ == "pilz_industrial_motion_planner::CommandPlanner")
+  if (planner_plugin_ == "pilz_industrial_motion_planner/CommandPlanner")
   {
     pipeline_planner->setProperty("max_acceleration_scaling_factor", max_acceleration_scaling_);
     pipeline_planner->setPlannerId(planner_id);

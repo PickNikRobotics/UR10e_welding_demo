@@ -161,6 +161,18 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "launch_dashboard_client", default_value="true", description="Launch RViz?"
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_tool_communication",
+            default_value="false",
+            description="Only available for e series!",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "workpiece_name",
             default_value="Workpiece_Demo_nominal",
             description="Folder of workpiece to load",
@@ -185,6 +197,8 @@ def generate_launch_description():
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
+    launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
     # Demo Arguments
     workpiece_name = LaunchConfiguration("workpiece_name")
 
@@ -278,6 +292,9 @@ def generate_launch_description():
             "fake_sensor_commands:=",
             fake_sensor_commands,
             " ",
+            "use_tool_communication:=",
+            use_tool_communication,
+            " ",
         ]
     )
     robot_description = {"robot_description": robot_description_content}
@@ -325,7 +342,7 @@ def generate_launch_description():
     ompl_pipeline["start_state_max_bounds_error"] = 0.1
 
     pilz_industrial_planning_pipeline = {
-        "planning_plugin": "pilz_industrial_motion_planner::CommandPlanner",
+        "planning_plugin": "pilz_industrial_motion_planner/CommandPlanner",
         "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
         # "request_adapters": "",
         "start_state_max_bounds_error": 0.1,
@@ -430,6 +447,7 @@ def generate_launch_description():
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
+        condition=IfCondition(launch_dashboard_client),
         executable="dashboard_client",
         name="dashboard_client",
         output="screen",
@@ -506,6 +524,9 @@ def generate_launch_description():
     ##############################
 
     # Load params
+    common_hybrid_planning_param = load_yaml(
+        "hybrid_planning_demo", "config/common_hybrid_planning_params.yaml"
+    )
     global_planner_param = load_yaml(
         "hybrid_planning_demo", "config/global_planner.yaml"
     )
@@ -524,15 +545,17 @@ def generate_launch_description():
         composable_node_descriptions=[
             ComposableNode(
                 package="moveit_hybrid_planning",
-                plugin="moveit_hybrid_planning::GlobalPlannerComponent",
+                plugin="moveit::hybrid_planning::GlobalPlannerComponent",
                 # package="hybrid_planning_demo",
                 # plugin="hybrid_planning_demo::GlobalMTCPlannerComponent",
                 name="global_planner",
                 parameters=[
+                    common_hybrid_planning_param,
                     global_planner_param,
                     robot_description,
                     robot_description_semantic,
                     kinematics_yaml,
+                    cartesian_limits_yaml,
                     welding_param,
                     # {"ompl": ompl_pipeline},
                     {
@@ -544,9 +567,10 @@ def generate_launch_description():
             ),
             ComposableNode(
                 package="moveit_hybrid_planning",
-                plugin="moveit_hybrid_planning::LocalPlannerComponent",
+                plugin="moveit::hybrid_planning::LocalPlannerComponent",
                 name="local_planner",
                 parameters=[
+                    common_hybrid_planning_param,
                     local_planner_param,
                     robot_description,
                     robot_description_semantic,
@@ -556,9 +580,12 @@ def generate_launch_description():
             ),
             ComposableNode(
                 package="moveit_hybrid_planning",
-                plugin="moveit_hybrid_planning::HybridPlanningManager",
+                plugin="moveit::hybrid_planning::HybridPlanningManager",
                 name="hybrid_planning_manager",
-                parameters=[hybrid_planning_manager_param],
+                parameters=[
+                    common_hybrid_planning_param,
+                    hybrid_planning_manager_param,
+                ],
             ),
         ],
         output="screen",
