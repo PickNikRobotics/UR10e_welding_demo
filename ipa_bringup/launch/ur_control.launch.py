@@ -158,6 +158,18 @@ def generate_launch_description():
             "launch_rviz", default_value="true", description="Launch RViz?"
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "launch_dashboard_client", default_value="true", description="Launch RViz?"
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_tool_communication",
+            default_value="false",
+            description="Only available for e series!",
+        )
+    )
 
     # Initialize Arguments
     ur_type = LaunchConfiguration("ur_type")
@@ -177,6 +189,8 @@ def generate_launch_description():
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
+    launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
 
     joint_limit_params = PathJoinSubstitution(
         [FindPackageShare(description_package), "config", ur_type, "joint_limits.yaml"]
@@ -267,6 +281,9 @@ def generate_launch_description():
             " ",
             "fake_sensor_commands:=",
             fake_sensor_commands,
+            " ",
+            "use_tool_communication:=",
+            use_tool_communication,
             " ",
         ]
     )
@@ -387,6 +404,7 @@ def generate_launch_description():
 
     dashboard_client_node = Node(
         package="ur_robot_driver",
+        condition=IfCondition(launch_dashboard_client),
         executable="dashboard_client",
         name="dashboard_client",
         output="screen",
