@@ -52,7 +52,6 @@ def launch_setup(context, *args, **kwargs):
     start_joint_controller = LaunchConfiguration("start_joint_controller")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
-    launch_servo = LaunchConfiguration("launch_servo")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
     use_tool_communication = LaunchConfiguration("use_tool_communication")
@@ -371,23 +370,6 @@ def launch_setup(context, *args, **kwargs):
         arguments=["0.0", "0.0", "0.0", "0.0", "0.0", "0.0", "world", "base_link"],
     )
 
-    # Servo node for realtime control
-    servo_yaml = load_yaml("ur_moveit_config", "config/ur_servo.yaml")
-    servo_params = {"moveit_servo": servo_yaml}
-    servo_node = Node(
-        package="moveit_servo",
-        condition=IfCondition(launch_servo),
-        executable="servo_node_main",
-        parameters=[
-            servo_params,
-            robot_description,
-            robot_description_semantic,
-        ],
-        output={
-            "stdout": "screen",
-            "stderr": "screen",
-        },
-    )
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -471,7 +453,7 @@ def launch_setup(context, *args, **kwargs):
         name="hybrid_planning_container",
         namespace="/",
         package="rclcpp_components",
-        executable="component_container_mt",
+        executable="component_container",
         composable_node_descriptions=[
             ComposableNode(
                 package="moveit_hybrid_planning",
@@ -528,12 +510,7 @@ def launch_setup(context, *args, **kwargs):
         name="hybrid_planning_test_node",
         output="screen",
         # prefix=["xterm -e gdb -ex run --args"],
-        parameters=[
-            common_hybrid_planning_param,
-            robot_description,
-            robot_description_semantic,
-            kinematics_yaml,
-        ],
+        parameters=[robot_description, robot_description_semantic, kinematics_yaml],
     )
 
     ##############################
@@ -597,16 +574,15 @@ def launch_setup(context, *args, **kwargs):
         robot_state_publisher_node,
         rviz_node,
         joint_state_broadcaster_spawner,
-        # io_and_status_controller_spawner,
+        io_and_status_controller_spawner,
         speed_scaling_state_broadcaster_spawner,
-        # force_torque_sensor_broadcaster_spawner,
-        # forward_position_controller_spawner_stopped,
-        # initial_joint_controller_spawner_stopped,
+        force_torque_sensor_broadcaster_spawner,
+        forward_position_controller_spawner_stopped,
+        initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
         move_group_node,
         mongodb_server_node,
         static_tf,
-        # servo_node
         container,
         # moveit_publish_scene_from_text,
         plugin_task_description,

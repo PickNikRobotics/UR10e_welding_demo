@@ -127,24 +127,14 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
 
   geometry_msgs::msg::PoseStamped start_pose;
   start_pose.header.frame_id = "world";
-  start_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
-  start_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
-  start_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
-  start_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
+  start_pose.pose = motion_plan_req.reference_trajectories[0].cartesian_trajectory[0].points[0].point.pose;
 
   geometry_msgs::msg::PoseStamped goal_pose;
   goal_pose.header.frame_id = "world";
-  goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
-  goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
-  goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
-  goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation;
+  goal_pose.pose = motion_plan_req.reference_trajectories[0].cartesian_trajectory[0].points[1].point.pose;
 
   // Move to approach
   {
-    geometry_msgs::msg::PoseStamped goal_pose;
-    goal_pose.header.frame_id = "world";
-    goal_pose.pose = motion_plan_req.reference_trajectories[0].cartesian_trajectory[0].points[0].point.pose;
-
     // Apply offset to get approach pose
     Eigen::Isometry3d goal;
     tf2::fromMsg(start_pose.pose, goal);
@@ -184,11 +174,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
 
   // Weld
   {
-    geometry_msgs::msg::PoseStamped goal_pose;
-    goal_pose.header.frame_id = "world";
-    goal_pose.pose = motion_plan_req.reference_trajectories[0].cartesian_trajectory[0].points[1].point.pose;
-
-    auto stage = std::make_unique<stages::MoveTo>("linear motion", sampling_planner);
+    auto stage = std::make_unique<stages::MoveTo>("Welding Motion", sampling_planner);
     stage->setGroup("ur_manipulator");
     stage->setIKFrame("tcp_welding_gun_link");
     stage->properties().set("marker_ns", "retreat");
