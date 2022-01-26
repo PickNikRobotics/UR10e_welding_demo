@@ -1,15 +1,17 @@
+<class_libraries>
 <library path="servo_local_solver">
-  <class type="hybrid_planning_demo::ServoSolver" base_class_type="moveit::hybrid_planning::LocalConstraintSolverInterface">
+  <class name="hybrid_planning_demo/ServoSolver" type="hybrid_planning_demo::ServoSolver" base_class_type="moveit::hybrid_planning::LocalConstraintSolverInterface">
     <description>Uses Servo as a local solver.</description>
   </class>
 </library>
 <library path="servo_sampler">
-  <class type="hybrid_planning_demo::SimpleServoSampler" base_class_type="moveit::hybrid_planning::TrajectoryOperatorInterface">
+  <class name="hybrid_planning_demo/SimpleServoSampler" type="hybrid_planning_demo::SimpleServoSampler" base_class_type="moveit::hybrid_planning::TrajectoryOperatorInterface">
     <description>Remake of SimpleSampler to use with Servo local solver.</description>
   </class>
 </library>
 <library path="global_mtc_planner_component">
-  <class type="hybrid_planning_demo::GlobalMTCPlannerComponent" base_class_type="moveit::hybrid_planning::GlobalPlannerInterface">
+  <class name="hybrid_planning_demo/GlobalMTCPlannerComponent" type="hybrid_planning_demo::GlobalMTCPlannerComponent" base_class_type="moveit::hybrid_planning::GlobalPlannerInterface">
     <description>Include MTC as global planner component.</description>
   </class>
 </library>
+</class_libraries>

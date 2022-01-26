@@ -1,8 +1,8 @@
 
 robot_description: "robot_description"
 group_name: "ur_manipulator"
-trajectory_operator_plugin_name: "hybrid_planning_demo::SimpleServoSampler"
-local_constraint_solver_plugin_name: "hybrid_planning_demo::ServoSolver"
+trajectory_operator_plugin_name: "hybrid_planning_demo/SimpleServoSampler"
+local_constraint_solver_plugin_name: "hybrid_planning_demo/ServoSolver"
 local_planning_frequency: 100.0
 global_solution_topic: "global_trajectory"
 local_solution_topic: "/joint_trajectory_controller/joint_trajectory_NOT_HERE"

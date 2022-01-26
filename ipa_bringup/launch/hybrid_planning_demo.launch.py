@@ -220,7 +220,7 @@ def launch_setup(context, *args, **kwargs):
     ompl_planning_pipeline_config["move_group"].update(ompl_planning_yaml)
 
     pilz_industrial_planning_pipeline = {
-        "planning_plugin": "pilz_industrial_motion_planner::CommandPlanner",
+        "planning_plugin": "pilz_industrial_motion_planner/CommandPlanner",
         "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
         # "request_adapters": "",
         "start_state_max_bounds_error": 0.1,
@@ -485,6 +485,7 @@ def launch_setup(context, *args, **kwargs):
                     robot_description,
                     robot_description_semantic,
                     kinematics_yaml,
+                    cartesian_limits_yaml,
                     welding_param,
                     # {"ompl": ompl_pipeline},
                     {

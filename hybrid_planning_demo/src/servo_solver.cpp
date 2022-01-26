@@ -65,7 +65,7 @@ bool ServoSolver::initialize(const rclcpp::Node::SharedPtr& node,
       "/joint_trajectory_controller/joint_trajectory", 10);
 
   // Get Servo Parameters
-  servo_parameters_ = moveit_servo::ServoParameters::makeServoParameters(node_handle_);
+  servo_parameters_ = moveit_servo::ServoParameters::makeServoParameters(node_handle_, "moveit_servo");
   if (!servo_parameters_)
   {
     RCLCPP_FATAL(LOGGER, "Failed to load the servo parameters");
@@ -201,4 +201,4 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
 
 #include <pluginlib/class_list_macros.hpp>
 
-PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::ServoSolver, moveit_hybrid_planning::LocalConstraintSolverInterface);
+PLUGINLIB_EXPORT_CLASS(hybrid_planning_demo::ServoSolver, moveit::hybrid_planning::LocalConstraintSolverInterface);

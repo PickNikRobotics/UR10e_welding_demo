@@ -46,6 +46,8 @@ def launch_setup(context, *args, **kwargs):
     prefix = LaunchConfiguration("prefix")
     use_fake_hardware = LaunchConfiguration("use_fake_hardware")
     fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
     # Demo Arguments
     workpiece_name = LaunchConfiguration("workpiece_name")
 
@@ -138,6 +140,9 @@ def launch_setup(context, *args, **kwargs):
             " ",
             "fake_sensor_commands:=",
             fake_sensor_commands,
+            " ",
+            "use_tool_communication:=",
+            use_tool_communication,
             " ",
         ]
     )

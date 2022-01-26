@@ -34,7 +34,7 @@ bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
                                                     std::vector<std::string>({ "pilz_industrial_motion_planner" }));
   node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "namespace", UNDEFINED);
   node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "planning_plugin",
-                                       "pilz_industrial_motion_planner::CommandPlanner");
+                                       "pilz_industrial_motion_planner/CommandPlanner");
 
   // Declare PlanRequestParameters
   node->declare_parameter<std::string>(PLAN_REQUEST_PARAM_NS + "planner_id", "LIN");
@@ -67,18 +67,18 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   auto motion_plan_req = (global_goal_handle->get_goal())->motion_sequence.items[0].req;
 
   // Set parameters required by the planning component
-  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planner_id", motion_plan_req.planner_id });
-  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_pipeline", motion_plan_req.pipeline_id });
-  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_attempts", motion_plan_req.num_planning_attempts });
-  node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_time", motion_plan_req.allowed_planning_time });
-  node_ptr_->set_parameter(
-      { PLAN_REQUEST_PARAM_NS + "max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor });
-  node_ptr_->set_parameter(
-      { PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor });
+  // node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planner_id", motion_plan_req.planner_id });
+  // node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_pipeline", motion_plan_req.pipeline_id });
+  // node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_attempts", motion_plan_req.num_planning_attempts });
+  // node_ptr_->set_parameter({ PLAN_REQUEST_PARAM_NS + "planning_time", motion_plan_req.allowed_planning_time });
+  // node_ptr_->set_parameter(
+  //     { PLAN_REQUEST_PARAM_NS + "max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor });
+  // node_ptr_->set_parameter(
+  //     { PLAN_REQUEST_PARAM_NS + "max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor });
 
   // Result
   moveit_msgs::msg::MotionPlanResponse planning_solution;
-  planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
+  planning_solution.error_code.val = planning_solution.error_code.FAILURE;
   planning_solution.group_name = "ur_manipulator";
 
   task_ = std::make_shared<moveit::task_constructor::Task>();
@@ -115,7 +115,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
    ***************************************************/
   using namespace moveit::task_constructor::stages;
   {
-    auto current_state = std::make_unique<stages::CurrentState>("current state");
+    auto current_state = std::make_unique<stages::CurrentState>("Initial State");
     t.add(std::move(current_state));
   }
 
@@ -125,6 +125,20 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
 
   // TODO: Use processit_tasks instead of hacked approach, weld, retract poses
 
+  geometry_msgs::msg::PoseStamped start_pose;
+  start_pose.header.frame_id = "world";
+  start_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.x;
+  start_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.y;
+  start_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[0].target_point_offset.z;
+  start_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[0].orientation;
+
+  geometry_msgs::msg::PoseStamped goal_pose;
+  goal_pose.header.frame_id = "world";
+  goal_pose.pose.position.x = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.x;
+  goal_pose.pose.position.y = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.y;
+  goal_pose.pose.position.z = motion_plan_req.goal_constraints[0].position_constraints[1].target_point_offset.z;
+  goal_pose.pose.orientation = motion_plan_req.goal_constraints[0].orientation_constraints[1].orientation;
+
   // Move to approach
   {
     geometry_msgs::msg::PoseStamped goal_pose;
@@ -133,32 +147,39 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
 
     // Apply offset to get approach pose
     Eigen::Isometry3d goal;
-    tf2::fromMsg(goal_pose.pose, goal);
+    tf2::fromMsg(start_pose.pose, goal);
     Eigen::Isometry3d approach_offset = Eigen::Isometry3d::Identity();
     approach_offset.translation().z() = -0.1;
     goal = goal * approach_offset;
-    tf2::convert(goal, goal_pose.pose);
+    geometry_msgs::msg::PoseStamped approach_pose = start_pose;
+    tf2::convert(goal, approach_pose.pose);
 
-    sampling_planner->setPlannerId("PTP");
-    auto stage = std::make_unique<stages::MoveTo>("move to start", sampling_planner);
+    auto stage = std::make_unique<stages::MoveTo>("Move to Approach Pose", sampling_planner);
     stage->setGroup("ur_manipulator");
     stage->setIKFrame("tcp_welding_gun_link");
-    stage->properties().set("marker_ns", "retreat");
-    stage->setGoal(goal_pose);
+    stage->properties().set("marker_ns", "approach");
+    stage->setGoal(approach_pose);
     t.add(std::move(stage));
   }
 
   // Approach
   {
-    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
-    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+    auto stage = std::make_unique<stages::MoveTo>("Approach to start point", sampling_planner);
+    stage->setGroup("ur_manipulator");
     stage->setIKFrame("tcp_welding_gun_link");
-    stage->properties().set("marker_ns", "retreat");
-    geometry_msgs::msg::Vector3Stamped vec;
-    vec.header.frame_id = "tcp_welding_gun_link";
-    vec.vector.z = 0.1;
-    stage->setDirection(vec);
+    stage->properties().set("marker_ns", "approach");
+    stage->setGoal(start_pose);
     t.add(std::move(stage));
+
+    // auto stage = std::make_unique<stages::MoveRelative>("Approaching start point", cartesian_planner);
+    // stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+    // stage->setIKFrame("tcp_welding_gun_link");
+    // stage->properties().set("marker_ns", "retreat");
+    // geometry_msgs::msg::Vector3Stamped vec;
+    // vec.header.frame_id = "tcp_welding_gun_link";
+    // vec.vector.z = 0.05;
+    // stage->setDirection(vec);
+    // t.add(std::move(stage));
   }
 
   // Weld
@@ -175,16 +196,22 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
     t.add(std::move(stage));
   }
 
-  // Retract
+  // Retreat
   {
-    auto stage = std::make_unique<stages::MoveRelative>("relative motion", cartesian_planner);
-    stage->properties().configureInitFrom(Stage::PARENT, { "group" });
+    // Apply offset to get retreat pose
+    Eigen::Isometry3d goal;
+    tf2::fromMsg(goal_pose.pose, goal);
+    Eigen::Isometry3d retreat_offset = Eigen::Isometry3d::Identity();
+    retreat_offset.translation().z() = -0.1;
+    goal = goal * retreat_offset;
+    geometry_msgs::msg::PoseStamped retreat_pose = start_pose;
+    tf2::convert(goal, retreat_pose.pose);
+
+    auto stage = std::make_unique<stages::MoveTo>("Retreat Motion", sampling_planner);
+    stage->setGroup("ur_manipulator");
     stage->setIKFrame("tcp_welding_gun_link");
     stage->properties().set("marker_ns", "retreat");
-    geometry_msgs::msg::Vector3Stamped vec;
-    vec.header.frame_id = "tcp_welding_gun_link";
-    vec.vector.z = -0.1;
-    stage->setDirection(vec);
+    stage->setGoal(retreat_pose);
     t.add(std::move(stage));
   }
 
@@ -196,6 +223,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   t.plan(max_solutions);
   if (t.numSolutions() == max_solutions)
   {
+    planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
     moveit_task_constructor_msgs::msg::Solution solution;
     t.solutions().front()->fillMessage(solution, &t.introspection());
     auto& solution_traj = planning_solution.trajectory;
