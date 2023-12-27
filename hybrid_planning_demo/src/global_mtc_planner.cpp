@@ -217,7 +217,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   {
     planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
     moveit_task_constructor_msgs::msg::Solution solution;
-    t.solutions().front()->fillMessage(solution, &t.introspection());
+    t.solutions().front()->appendTo(solution, &t.introspection());
     auto& solution_traj = planning_solution.trajectory;
     for (const auto& sub_traj : solution.sub_trajectory)
     {
