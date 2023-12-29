@@ -479,7 +479,7 @@ def generate_launch_description():
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "joint_state_broadcaster",
             "--controller-manager",
@@ -489,13 +489,13 @@ def generate_launch_description():
 
     io_and_status_controller_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=["io_and_status_controller", "-c", "/controller_manager"],
     )
 
     speed_scaling_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "speed_scaling_state_broadcaster",
             "--controller-manager",
@@ -505,7 +505,7 @@ def generate_launch_description():
 
     force_torque_sensor_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "force_torque_sensor_broadcaster",
             "--controller-manager",
@@ -515,7 +515,7 @@ def generate_launch_description():
 
     robot_controller_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[robot_controller, "-c", "/controller_manager"],
     )
 
