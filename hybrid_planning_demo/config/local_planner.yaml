@@ -16,3 +16,8 @@ stop_before_collision: true
 
 # ServoSolver param
 velocity_scaling_threshold: 0.1
+
+# Subscribe to these topics
+monitored_planning_scene: "/planning_scene"
+collision_object_topic: "/collision_object"
+joint_states_topic: "/joint_states"
