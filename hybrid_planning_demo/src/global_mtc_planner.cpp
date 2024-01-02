@@ -29,7 +29,7 @@ using namespace moveit::task_constructor;
 
 bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 {
-  // Declare planning pipeline paramter
+  // Declare planning pipeline parameter
   node->declare_parameter<std::vector<std::string>>(PLANNING_PIPELINES_NS + "pipeline_names",
                                                     std::vector<std::string>({ "pilz_industrial_motion_planner" }));
   node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "namespace", UNDEFINED);

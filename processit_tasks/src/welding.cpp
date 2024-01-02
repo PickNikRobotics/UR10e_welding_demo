@@ -156,7 +156,7 @@ void Welding::approach()
   // Planning and execution of the task
   if (plan())
   {
-    ROS_INFO_NAMED(LOGNAME, "Planning succeded");
+    ROS_INFO_NAMED(LOGNAME, "Planning succeeded");
     std::cout << "Press Enter to approach pass." << std::endl;
     std::cin.get();
     // if (nh_.param("execute", false))
@@ -216,7 +216,7 @@ void Welding::weld()
   // Planning and execution of the task
   if (plan())
   {
-    ROS_INFO_NAMED(LOGNAME, "Planning succeded");
+    ROS_INFO_NAMED(LOGNAME, "Planning succeeded");
     processit_msgs::SetDigitalOut srv;
     srv.request.pin = 1;
     std::cout << "Enter 'WELD' to weld pass with welding source. Otherwise, enter anything else." << std::endl;
@@ -281,7 +281,7 @@ void Welding::retrieve()
   // Planning and execution of the task
   if (plan())
   {
-    ROS_INFO_NAMED(LOGNAME, "Planning succeded");
+    ROS_INFO_NAMED(LOGNAME, "Planning succeeded");
     std::cout << "Press Enter to retrieve from pass." << std::endl;
     std::cin.get();
     std::cin.get();

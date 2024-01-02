@@ -34,7 +34,7 @@
 
 /* Author: Sebastian Jahr
    Description: Local solver plugin that uses moveit_servo to execute the local trajectory in combination with
-   replanning capabilies
+   replanning capabilities
  */
 
 #pragma once
@@ -69,7 +69,7 @@ private:
   // Servo cpp interface
   std::unique_ptr<moveit_servo::Servo> servo_;
 
-  // Inteface to communicate with servo
+  // Interface to communicate with servo
   rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_cmd_pub_;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_cmd_pub_;
   rclcpp::Publisher<geometry_msgs::msg::TransformStamped>::SharedPtr ee_tf_pub_;

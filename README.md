@@ -56,5 +56,5 @@ ros2 launch ipa_bringup send_hybrid_goal.launch.py
 ros2 run ipa_bringup servo_keyboard_input
 ```
 
-As the robot starts the Cartesian path, you should be able to use the `6` key to rotate the last joint. `R` toggles the directon of rotation.
+As the robot starts the Cartesian path, you should be able to use the `6` key to rotate the last joint. `R` toggles the direction of rotation.
 > Note: you must have the `servo_keyboard_input` terminal selected for it to send commands

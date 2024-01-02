@@ -264,7 +264,7 @@ public:
           switch (result.code)
           {
             case rclcpp_action::ResultCode::SUCCEEDED:
-              RCLCPP_INFO(LOGGER, "Hybrid planning goal succeded");
+              RCLCPP_INFO(LOGGER, "Hybrid planning goal succeeded");
               break;
             case rclcpp_action::ResultCode::ABORTED:
               RCLCPP_ERROR(LOGGER, "Hybrid planning goal was aborted");
