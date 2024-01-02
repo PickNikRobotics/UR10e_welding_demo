@@ -424,16 +424,16 @@ def generate_launch_description():
     )
 
     # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
-        output="screen",
-    )
+    # mongodb_server_node = Node(
+    #     package="warehouse_ros_mongo",
+    #     executable="mongo_wrapper_ros.py",
+    #     parameters=[
+    #         {"warehouse_port": 33829},
+    #         {"warehouse_host": "localhost"},
+    #         {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
+    #     ],
+    #     output="screen",
+    # )
 
     control_node = Node(
         package="controller_manager",
@@ -659,7 +659,7 @@ def generate_launch_description():
         force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
         move_group_node,
-        mongodb_server_node,
+        # mongodb_server_node,
         container,
         # moveit_publish_scene_from_text,
         plugin_task_description,
