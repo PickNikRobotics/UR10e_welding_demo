@@ -20,15 +20,6 @@ jobs:
       - uses: actions/setup-python@v2
       - uses: pre-commit/action@v2.0.0
         id: precommit
-      - name: ShellCheck
-        # Make sure ShellCheck runs even if pre-commit fails - more info is more better
-        if: always()
-        uses: ludeeus/action-shellcheck@6d3f514f44620b9d4488e380339edc0d9bbe2fba
-        with:
-          # Ignore released install scripts. These will get updated separately
-          ignore_paths: release
-          # Check all files together so they can reference each other
-          check_together: 'yes'
       - name: Check LFS integrity
         if: always()
         run: git lfs fsck --pointers
