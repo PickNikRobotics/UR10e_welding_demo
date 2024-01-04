@@ -1,36 +1,12 @@
 # Upstream dependencies
 repositories:
-  Universal_Robots_Client_Library:
-    type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_Client_Library.git
-    version: master
-  Universal_Robots_ROS2_Driver:
-    type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver.git
-    version: main
-  Universal_Robots_ROS2_Description:
-    type: git
-    url: https://github.com/UniversalRobots/Universal_Robots_ROS2_Description.git
-    version: ros2
-  ur_msgs:
-    type: git
-    url: https://github.com/ros-industrial/ur_msgs.git
-    version: foxy
-  moveit2:
-    type: git
-    url: https://github.com/ros-planning/moveit2.git
-    version: main
-  moveit_msgs:
-    type: git
-    url: https://github.com/ros-planning/moveit_msgs.git
-    version: ros2
-  moveit_resources:
-    type: git
-    url: https://github.com/ros-planning/moveit_resources.git
-    version: ros2
   moveit_task_constructor:
     type: git
     url: https://github.com/ros-planning/moveit_task_constructor.git
+    version: humble
+  moveit_visual_tools:
+    type: git
+    url: https://github.com/ros-planning/moveit_visual_tools.git
     version: ros2
   rosparam_shortcuts:
     type: git
@@ -40,11 +16,3 @@ repositories:
     type: git
     url: https://github.com/PickNikRobotics/rviz_visual_tools.git
     version: ros2
-  moveit_visual_tools:
-    type: git
-    url: https://github.com/ros-planning/moveit_visual_tools.git
-    version: ros2
-  # warehouse_ros_mongo:
-  #   type: git
-  #   url: https://github.com/ros-planning/warehouse_ros_mongo.git
-  #   version: ros2
