@@ -34,7 +34,7 @@ source install/setup.bash
 This will launch a simulated UR10e (in the right scene, with welding gun) with MoveIt2 and let you plan and execute around
 
 ```sh
-ros2 launch ipa_bringup ur_control.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+ros2 launch ipa_bringup ur_control.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy use_mock_hardware:=true launch_rviz:=true
 ```
 
 ### Hybrid Planning Demonstration
@@ -42,7 +42,7 @@ This will launch a simulated UR5e, plan a Cartesian "welding" path, and allow us
 
 In a terminal:
 ```sh
-ros2 launch ipa_bringup hybrid_planning_demo.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy use_fake_hardware:=true launch_rviz:=true
+ros2 launch ipa_bringup hybrid_planning_demo.launch.py ur_type:=ur10e robot_ip:=yyy.yyy.yyy.yyy use_mock_hardware:=true launch_rviz:=true
 ```
 
 Load the `.scene` file which contains the workpiece in RViz.
