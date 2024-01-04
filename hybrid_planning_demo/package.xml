@@ -21,8 +21,8 @@
   <depend>processit_msgs</depend>
   <depend>processit_tasks</depend>
   <depend>moveit_hybrid_planning</depend>
+  <depend>moveit_servo</depend>
 
-  <exec_depend>moveit_servo</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 
