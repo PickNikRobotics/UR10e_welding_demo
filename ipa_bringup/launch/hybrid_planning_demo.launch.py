@@ -391,7 +391,7 @@ def generate_launch_description():
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
 
-    #planning_scene_monitor_parameters = {
+    # planning_scene_monitor_parameters = {
     #    "publish_planning_scene": True,
     #    "publish_geometry_updates": True,
     #    "publish_state_updates": True,
@@ -405,7 +405,7 @@ def generate_launch_description():
     #        "monitored_planning_scene_topic": "/move_group/monitored_planning_scene",
     #        "wait_for_initial_state_timeout": 10.0,
     #    },
-    #}
+    # }
 
     # Compose the path to the workpiece
     workpiece_path_param = PathJoinSubstitution(
@@ -453,7 +453,7 @@ def generate_launch_description():
             trajectory_execution,
             moveit_controllers,
             moveit_cpp,
-            #planning_scene_monitor_parameters,
+            # planning_scene_monitor_parameters,
             cartesian_limits_yaml,
             joint_limits_yaml,
         ],

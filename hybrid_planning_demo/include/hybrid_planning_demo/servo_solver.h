@@ -61,7 +61,7 @@ public:
         trajectory_msgs::msg::JointTrajectory& local_solution) override;
 
 private:
-  rclcpp::Node::SharedPtr node_handle_;
+  rclcpp::Node::SharedPtr node_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
 
   servo::Params servo_parameters_;
@@ -88,5 +88,8 @@ private:
 
   // Flag to indicate that replanning is requested
   bool feedback_send_;
+
+  // Command queue to build trajectory message and add current robot state
+  std::deque<moveit_servo::KinematicState> joint_cmd_rolling_window_;
 };
 }  // namespace hybrid_planning_demo
