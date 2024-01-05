@@ -98,7 +98,7 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
   moveit_msgs::msg::RobotTrajectory robot_command;
   local_trajectory.getRobotTrajectoryMsg(robot_command);
 
-  if (!robot_command.joint_trajectory.points.empty())
+  if (robot_command.joint_trajectory.points.empty())
   {
     feedback_result.feedback = "Reference trajectory does not contain any points";
     return feedback_result;
@@ -144,45 +144,42 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
 
   moveit_servo::KinematicState joint_state = servo_->getNextJointState(current_state, target_pose);
   const auto status = servo_->getStatus();
-  if (status != moveit_servo::StatusCode::INVALID)
+  if (status == moveit_servo::StatusCode::INVALID)
   {
     feedback_result.feedback = "Servo StatusCode 'INVALID'";
     return feedback_result;
   }
 
   // Add goal point to local solution
-  auto add_point = [this](trajectory_msgs::msg::JointTrajectory& joint_trajectory,
-                                    const moveit_servo::KinematicState& state) {
-    trajectory_msgs::msg::JointTrajectoryPoint point;
-    size_t num_joints = state.positions.size();
-    point.positions.reserve(num_joints);
-    point.velocities.reserve(num_joints);
-    point.accelerations.reserve(num_joints);
-    if (servo_parameters_.publish_joint_positions)
+  trajectory_msgs::msg::JointTrajectoryPoint point;
+  size_t num_joints = joint_state.positions.size();
+  point.positions.reserve(num_joints);
+  point.velocities.reserve(num_joints);
+  point.accelerations.reserve(num_joints);
+  if (servo_parameters_.publish_joint_positions)
+  {
+    for (const auto& pos : joint_state.positions)
     {
-      for (const auto& pos : state.positions)
-      {
-        point.positions.emplace_back(pos);
-      }
+      point.positions.emplace_back(pos);
     }
-    if (servo_parameters_.publish_joint_velocities)
+  }
+  if (servo_parameters_.publish_joint_velocities)
+  {
+    for (const auto& vel : joint_state.velocities)
     {
-      for (const auto& vel : state.velocities)
-      {
-        point.velocities.emplace_back(vel);
-      }
+      point.velocities.emplace_back(vel);
     }
-    if (servo_parameters_.publish_joint_accelerations)
+  }
+  if (servo_parameters_.publish_joint_accelerations)
+  {
+    for (const auto& acc : joint_state.accelerations)
     {
-      for (const auto& acc : state.accelerations)
-      {
-        point.accelerations.emplace_back(acc);
-      }
+      point.accelerations.emplace_back(acc);
     }
-    point.time_from_start = state.time_stamp - joint_trajectory.header.stamp;
-    joint_trajectory.points.emplace_back(point);
-  };
-  add_point(local_solution, joint_state);
+  }
+  point.time_from_start = rclcpp::Duration::from_seconds(0.1);
+  local_solution.points.emplace_back(point);
+  local_solution.joint_names = robot_command.joint_trajectory.joint_names;
 
   // Create twist command
   // current EE -> planning frame * planning frame -> target EE
