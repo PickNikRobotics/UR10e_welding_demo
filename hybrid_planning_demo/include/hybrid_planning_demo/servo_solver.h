@@ -40,9 +40,10 @@
 #pragma once
 
 #include <rclcpp/rclcpp.hpp>
+#include <std_msgs/msg/float64.hpp>
 #include <moveit/local_planner/local_constraint_solver_interface.h>
 
-#include <moveit_servo/servo.h>
+#include <moveit_servo/servo.hpp>
 
 namespace hybrid_planning_demo
 {
@@ -63,16 +64,16 @@ private:
   rclcpp::Node::SharedPtr node_handle_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
 
-  moveit_servo::ServoParameters::SharedConstPtr servo_parameters_;
-  double velocity_scaling_threshold_;  // Indicates below which velocity scaling replanning should be triggered
+  servo::Params servo_parameters_;
+  // double velocity_scaling_threshold_;  // Indicates below which velocity scaling replanning should be triggered
 
   // Servo cpp interface
   std::unique_ptr<moveit_servo::Servo> servo_;
 
   // Interface to communicate with servo
-  rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_cmd_pub_;
-  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_cmd_pub_;
-  rclcpp::Publisher<geometry_msgs::msg::TransformStamped>::SharedPtr ee_tf_pub_;
+  // rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_cmd_pub_;
+  // rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_cmd_pub_;
+  // rclcpp::Publisher<geometry_msgs::msg::TransformStamped>::SharedPtr ee_tf_pub_;
 
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr traj_cmd_pub_;
   bool publish_ = true;
