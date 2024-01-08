@@ -17,6 +17,8 @@
   <depend>visualization_msgs</depend>
   <depend>processit_msgs</depend>
   <!-- <depend>moveit_visual_tools</depend> -->
+  <depend>tinyxml_vendor</depend>
+  <depend>tinyxml</depend>
   <depend>yaml_cpp_vendor</depend>
 
   <test_depend>ament_lint_auto</test_depend>

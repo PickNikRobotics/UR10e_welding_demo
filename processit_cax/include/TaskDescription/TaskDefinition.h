@@ -189,7 +189,7 @@ public:
 
   /* Check whether a point on the WeldTask (for SplineSegment this runs very slow)
   and return the length from the corresponding point to the start point,if the point is not on it, return -1 */
-  bool IsPointOnWeldTask(int WeldTaskID, Vector3d Point, Vector3d Orientaion, double PositonTreshold, double& Length);
+  bool IsPointOnWeldTask(int WeldTaskID, Vector3d Point, Vector3d Orientation, double PositonTreshold, double& Length);
   bool IsPointOnWeldTask(int WeldTaskID, Vector3d Point, double PositonTreshold, double& Length);
 
   // Invert the WeldTask, given the Task ID

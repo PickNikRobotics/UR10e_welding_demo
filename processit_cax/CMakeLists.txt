@@ -31,6 +31,7 @@ find_package(Eigen3 REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
 find_package(tinyxml_vendor REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
+find_package(TinyXML REQUIRED)
 
 set(THIS_PACKAGE_INCLUDE_DEPENDS
   rclcpp
@@ -44,12 +45,15 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   tinyxml_vendor
   Eigen3
   eigen3_cmake_module
+  tinyxml_vendor
+  TinyXML
   yaml_cpp_vendor
 )
 
 include_directories(
   include
   ${EIGEN3_INCLUDE_DIR}
+  ${TinyXML_INCLUDE_DIR}
 )
 
 # Add TaskDescription Library (non-ROS!)
@@ -62,7 +66,7 @@ add_library (TaskDescription SHARED
   src/TaskDescription/TaskDefinition.cpp
   src/TaskDescription/WeldSegment.cpp
 )
-# target_link_libraries(TaskDescription ${TinyXML_LIBS} Eigen3::Eigen)
+target_link_libraries(TaskDescription ${TinyXML_LIBRARY} Eigen3::Eigen)
 
 # Add ROS wrapper for task description
 add_executable(plugin_task_description

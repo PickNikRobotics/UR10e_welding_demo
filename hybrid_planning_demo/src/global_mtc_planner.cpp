@@ -29,7 +29,7 @@ using namespace moveit::task_constructor;
 
 bool GlobalMTCPlannerComponent::initialize(const rclcpp::Node::SharedPtr& node)
 {
-  // Declare planning pipeline paramter
+  // Declare planning pipeline parameter
   node->declare_parameter<std::vector<std::string>>(PLANNING_PIPELINES_NS + "pipeline_names",
                                                     std::vector<std::string>({ "pilz_industrial_motion_planner" }));
   node->declare_parameter<std::string>(PLANNING_PIPELINES_NS + "namespace", UNDEFINED);
@@ -217,7 +217,7 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   {
     planning_solution.error_code.val = planning_solution.error_code.SUCCESS;
     moveit_task_constructor_msgs::msg::Solution solution;
-    t.solutions().front()->fillMessage(solution, &t.introspection());
+    t.solutions().front()->appendTo(solution, &t.introspection());
     auto& solution_traj = planning_solution.trajectory;
     for (const auto& sub_traj : solution.sub_trajectory)
     {

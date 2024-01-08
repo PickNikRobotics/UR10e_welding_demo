@@ -278,7 +278,7 @@ void WeldTask::WriteXML(TiXmlElement* ParentXmlNode, int j)
   XmlNodeWeldTask->SetAttribute("ID", TaskID);
   XmlNodeWeldTask->SetAttribute("State", State);
 
-  // loop trough all WeldSegments
+  // loop through all WeldSegments
   for (int i = 0; i < List_WeldSegment.size(); i++)
   {
     i_WeldSegment = GetWeldSegment(i);
@@ -1384,7 +1384,7 @@ int TaskList::GetWeldSegmentIDOfSubTaskFromStartPoint(int WeldTaskID, int SubTas
 /* discretize the subtask with a given max DiscretizationLength
    e.g. for WeldTask (FilletWeld0 (ID=0, length=100, type:linear); FilletWeld1 (ID=1, length:15, type:cycle); FilletWeld2
    (ID=2, length:8, type:spline)), which has SubTask(StartLength=50, EndLength=128), given MaxDiscretizationLength == 5,
-   return the discrete results in a vector: [50, -0, 5, 5, 5, -1, 4, 4, -2], the negtive number is the ID of FilletWeld */
+   return the discrete results in a vector: [50, -0, 5, 5, 5, -1, 4, 4, -2], the negative number is the ID of FilletWeld */
 vector<double> TaskList::GetDiscretizationLengthListOfSubTask(int WeldTaskID, int SubTaskID,
                                                               double MaxDiscretizationLength)
 {
@@ -1602,7 +1602,7 @@ void TaskList::SetTaskState(int WeldTaskID, int TaskState)
   less than the threshold
 */
 // Version A: adjust the length using the orientation of the point (for intersection point)
-bool TaskList::IsPointOnWeldTask(int WeldTaskID, Vector3d Point, Vector3d Orientaion, double PositionTreshold,
+bool TaskList::IsPointOnWeldTask(int WeldTaskID, Vector3d Point, Vector3d Orientation, double PositionTreshold,
                                  double& Length)
 {
   double FullLength = GetLengthOfWeldTask(WeldTaskID);
@@ -1652,7 +1652,7 @@ bool TaskList::IsPointOnWeldTask(int WeldTaskID, Vector3d Point, Vector3d Orient
       Vector3d Dir = GetDirectionSeamOfWeldTask(WeldTaskID, TempLength);
 
       // look for the sampling point, which has the minimal difference with the given orientation
-      double dot = abs(Dir.dot(Orientaion) / (Dir.norm() * Orientaion.norm()));
+      double dot = abs(Dir.dot(Orientation) / (Dir.norm() * Orientation.norm()));
       dot = (dot > 1) ? 1 : dot;
       double degree = acos(dot) * 180 / M_PI;
       double Temp = angle;
@@ -1668,7 +1668,7 @@ bool TaskList::IsPointOnWeldTask(int WeldTaskID, Vector3d Point, Vector3d Orient
         if (TempLength < 0)
           TempLength = FullLength + TempLength;
         Dir = GetDirectionSeamOfWeldTask(WeldTaskID, TempLength);
-        dot = abs(Dir.dot(Orientaion) / (Dir.norm() * Orientaion.norm()));
+        dot = abs(Dir.dot(Orientation) / (Dir.norm() * Orientation.norm()));
         dot = (dot > 1) ? 1 : dot;
         degree = acos(dot) * 180 / M_PI;
         double Temp = angle;

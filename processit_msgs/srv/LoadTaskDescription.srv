@@ -9,5 +9,5 @@ geometry_msgs/PoseStamped workpiece_pose
 # An array of weld seams. In linear cases, a weld seam consists of start and end pose
 processit_msgs/WeldSeam[] weld_seams
 
-# Boolean whether the task description has been loaded succesfully
+# Boolean whether the task description has been loaded successfully
 bool success

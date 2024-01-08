@@ -34,16 +34,45 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/psf/black
-    rev: 20.8b1
+    rev: 22.3.0
     hooks:
       - id: black
 
-  - repo: local
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.0.0
+    hooks:
+      - id: codespell
+        args: ["--write-changes", "-L", "atleast,inout,ether"] # Provide a comma-separated list of misspelled words that codespell should ignore (for example: '-L', 'word1,word2,word3').
+        exclude: (\.(svg|pyc|stl|dae|asc)|pnpm-lock.yaml)$
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v14.0.6
     hooks:
       - id: clang-format
-        name: clang-format
-        description: Format files with ClangFormat.
-        entry: clang-format-10
-        language: system
-        files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|js|m|proto|vert)$
-        args: ['-fallback-style=none', '-i']
+        files: \.(c|cc|cxx|cpp|frag|glsl|h|hpp|hxx|ih|ispc|ipp|java|m|proto|vert)$
+        # -i arg is included by default by the hook
+        args: ["-fallback-style=none"]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.27.1
+    hooks:
+      - id: yamllint
+        args:
+          [
+            "--no-warnings",
+            "--config-data",
+            "{extends: default, rules: {line-length: disable, braces: {max-spaces-inside: 1}}}",
+          ]
+        types: [text]
+        files: \.(yml|yaml)$
+        exclude: 'src/moveit_studio_web/pnpm-lock.yaml'
+
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: v3.10.3
+    hooks:
+      - id: markdown-link-check
+
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker

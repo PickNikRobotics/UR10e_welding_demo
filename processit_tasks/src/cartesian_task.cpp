@@ -227,7 +227,7 @@ bool CartesianTask::execute()
 {
   RCLCPP_INFO(LOGGER, "Executing solution trajectory");
   moveit_task_constructor_msgs::action::ExecuteTaskSolution::Goal execute_goal;
-  task_->solutions().front()->fillMessage(execute_goal.solution);
+  task_->solutions().front()->appendTo(execute_goal.solution);
   auto execute_future = execute_->async_send_goal(execute_goal);
   execute_future.wait();
 

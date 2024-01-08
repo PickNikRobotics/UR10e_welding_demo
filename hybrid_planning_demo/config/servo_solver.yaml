@@ -7,8 +7,8 @@ use_gazebo: false # Whether the robot is started in a Gazebo simulation environm
 command_in_type: "speed_units" # "unitless"> in the range [-1:1], as if from joystick. "speed_units"> cmds are in m/s and rad/s
 scale:
   # Scale parameters are only used if command_in_type=="unitless"
-  linear:  0.4  # Max linear velocity. Meters per publish_period. Unit is [m/s]. Only used for Cartesian commands.
-  rotational:  0.8 # Max angular velocity. Rads per publish_period. Unit is [rad/s]. Only used for Cartesian commands.
+  linear: 0.4  # Max linear velocity. Meters per publish_period. Unit is [m/s]. Only used for Cartesian commands.
+  rotational: 0.8 # Max angular velocity. Rads per publish_period. Unit is [rad/s]. Only used for Cartesian commands.
   # Max joint angular/linear velocity. Rads or Meters per publish period. Only used for joint commands on joint_command_in_topic.
   joint: 0.5
 
@@ -29,21 +29,21 @@ publish_joint_accelerations: false
 low_pass_filter_coeff: 2.0  # Larger --> trust the filtered data more, trust the measurements less.
 
 ## MoveIt properties
-move_group_name:  ur_manipulator  # Often 'manipulator' or 'arm'
+move_group_name: ur_manipulator  # Often 'manipulator' or 'arm'
 planning_frame: base_link  # The MoveIt planning frame. Often 'base_link' or 'world'
 
 ## Other frames
 ee_frame_name: tcp_welding_gun_link  # The name of the end effector link, used to return the EE pose
-robot_link_command_frame:  tcp_welding_gun_link  # commands must be given in the frame of a robot link. Usually either the base or end effector
+robot_link_command_frame: tcp_welding_gun_link  # commands must be given in the frame of a robot link. Usually either the base or end effector
 
 ## Stopping behaviour
-incoming_command_timeout:  0.1  # Stop servoing if X seconds elapse without a new command
+incoming_command_timeout: 0.1  # Stop servoing if X seconds elapse without a new command
 # If 0, republish commands forever even if the robot is stationary. Otherwise, specify num. to publish.
 # Important because ROS may drop some messages and we need the robot to halt reliably.
 num_outgoing_halt_msgs_to_publish: 4
 
 ## Configure handling of singularities and joint limits
-lower_singularity_threshold:  17.0  # Start decelerating when the condition number hits this (close to singularity)
+lower_singularity_threshold: 17.0  # Start decelerating when the condition number hits this (close to singularity)
 hard_stop_singularity_threshold: 30.0 # Stop when the condition number hits this
 joint_limit_margin: 0.1 # added as a buffer to joint limits [radians]. If moving quickly, make this larger.
 
