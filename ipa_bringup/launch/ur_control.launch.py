@@ -381,16 +381,16 @@ def generate_launch_description():
     )
 
     # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
-        output="screen",
-    )
+    # mongodb_server_node = Node(
+    #     package="warehouse_ros_mongo",
+    #     executable="mongo_wrapper_ros.py",
+    #     parameters=[
+    #         {"warehouse_port": 33829},
+    #         {"warehouse_host": "localhost"},
+    #         {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
+    #     ],
+    #     output="screen",
+    # )
 
     control_node = Node(
         package="controller_manager",
