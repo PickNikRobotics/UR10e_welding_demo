@@ -1,9 +1,17 @@
 # Upstream dependencies
 repositories:
+  moveit2:
+    type: git
+    url: https://github.com/ros-planning/moveit2.git
+    version: main
+  moveit_msgs:
+    type: git
+    url: https://github.com/ros-planning/moveit_msgs.git
+    version: ros2
   moveit_task_constructor:
     type: git
     url: https://github.com/ros-planning/moveit_task_constructor.git
-    version: humble
+    version: ros2
   moveit_visual_tools:
     type: git
     url: https://github.com/ros-planning/moveit_visual_tools.git
