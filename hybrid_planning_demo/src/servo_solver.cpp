@@ -152,7 +152,7 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
   // Transform goal pose to command frame
   servo_->setCommandType(moveit_servo::CommandType::TWIST);
   moveit_servo::TwistCommand target_twist{
-    "base_link",
+    "tcp_welding_gun_link",
     { diff_pose.translation().x() * vel_scale, diff_pose.translation().y() * vel_scale,
       diff_pose.translation().z() * vel_scale, axis_angle.axis().x() * axis_angle.angle() * vel_scale,
       axis_angle.axis().y() * axis_angle.angle() * vel_scale, 0.0 }
