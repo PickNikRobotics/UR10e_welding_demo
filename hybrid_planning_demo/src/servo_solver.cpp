@@ -143,8 +143,10 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
   Eigen::Isometry3d diff_pose = current_pose.inverse() * target_pose;
   Eigen::AngleAxisd axis_angle(diff_pose.linear());
 
-  constexpr double fixed_vel = 0.05;
-  const double vel_scale = fixed_vel / diff_pose.translation().norm();
+  constexpr double fixed_trans_vel = 0.05;
+  constexpr double fixed_rot_vel = 5;
+  const double trans_gain = fixed_trans_vel / diff_pose.translation().norm();
+  const double rot_gain = fixed_rot_vel / diff_pose.rotation().norm();
 
   // Calculate Cartesian command delta
   // Transform current pose to command frame
@@ -153,9 +155,9 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
   servo_->setCommandType(moveit_servo::CommandType::TWIST);
   moveit_servo::TwistCommand target_twist{
     "tcp_welding_gun_link",
-    { diff_pose.translation().x() * vel_scale, diff_pose.translation().y() * vel_scale,
-      diff_pose.translation().z() * vel_scale, axis_angle.axis().x() * axis_angle.angle() * vel_scale,
-      axis_angle.axis().y() * axis_angle.angle() * vel_scale, 0.0 }
+    { diff_pose.translation().x() * trans_gain, diff_pose.translation().y() * trans_gain,
+      diff_pose.translation().z() * trans_gain, axis_angle.axis().x() * axis_angle.angle() * rot_gain,
+      axis_angle.axis().y() * axis_angle.angle() * rot_gain, 0.0 }
   };
 
   std::optional<trajectory_msgs::msg::JointTrajectory> trajectory_msg;
