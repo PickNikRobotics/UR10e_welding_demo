@@ -65,15 +65,12 @@ private:
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
 
   servo::Params servo_parameters_;
-  // double velocity_scaling_threshold_;  // Indicates below which velocity scaling replanning should be triggered
 
   // Servo cpp interface
   std::unique_ptr<moveit_servo::Servo> servo_;
 
-  // Interface to communicate with servo
-  // rclcpp::Publisher<control_msgs::msg::JointJog>::SharedPtr joint_cmd_pub_;
+  // Uncomment for debugging
   // rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_cmd_pub_;
-  // rclcpp::Publisher<geometry_msgs::msg::TransformStamped>::SharedPtr ee_tf_pub_;
 
   rclcpp::Publisher<trajectory_msgs::msg::JointTrajectory>::SharedPtr traj_cmd_pub_;
   bool publish_ = true;

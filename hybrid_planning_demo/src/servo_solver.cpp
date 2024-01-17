@@ -49,20 +49,8 @@ bool ServoSolver::initialize(const rclcpp::Node::SharedPtr& node,
                              const planning_scene_monitor::PlanningSceneMonitorPtr& planning_scene_monitor,
                              const std::string& group_name)
 {
-  // Load parameter & initialize member variables
-  // if (node->has_parameter("velocity_scaling_threshold"))
-  //   node->get_parameter<double>("velocity_scaling_threshold", velocity_scaling_threshold_);
-  // else
-  //   velocity_scaling_threshold_ = node->declare_parameter<double>("velocity_scaling_threshold", 0.0);
-
   planning_scene_monitor_ = planning_scene_monitor;
   node_ = node;
-  // joint_cmd_pub_ = node_->create_publisher<control_msgs::msg::JointJog>("~/delta_joint_cmds", 10);
-  // twist_cmd_pub_ = node_->create_publisher<geometry_msgs::msg::TwistStamped>("~/delta_twist_cmds", 10);
-  // ee_tf_pub_ = node_->create_publisher<geometry_msgs::msg::TransformStamped>("~/eef_position", 10);
-
-  // traj_cmd_pub_ = node_->create_publisher<trajectory_msgs::msg::JointTrajectory>(
-  //     "/joint_trajectory_controller/joint_trajectory", 10);
 
   // Get Servo Parameters
   // Get the servo parameters.
@@ -74,9 +62,8 @@ bool ServoSolver::initialize(const rclcpp::Node::SharedPtr& node,
   // Create Servo and start it
   servo_ = std::make_unique<moveit_servo::Servo>(node_, servo_param_listener, planning_scene_monitor_);
 
-  // Create publisher to send servo commands
-  // joint_cmd_pub_ =
-  //     node_->create_publisher<control_msgs::msg::JointJog>(servo_parameters_.joint_command_in_topic, 1);
+  // Use for debugging
+  // twist_cmd_pub_ = node_->create_publisher<geometry_msgs::msg::TwistStamped>("~/delta_twist_cmds", 10);
   return true;
 }
 
@@ -105,26 +92,6 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
     return feedback_result;
   }
 
-  // If we're getting to close to a Replan if velocity scaling is below threshold
-  // if (replan_)
-  //{
-  //  if (!feedback_send_)
-  //  {
-  //    feedback_result.feedback = "collision_ahead";
-  //    auto msg = std::make_unique<control_msgs::msg::JointJog>();
-  //    msg->header.stamp = node_->now();
-  //    msg->joint_names = robot_command.joint_trajectory.joint_names;
-  //    msg->velocities.assign(robot_command.joint_trajectory.joint_names.size(), 0);
-  //    joint_cmd_pub_->publish(std::move(msg));
-  //    publish_ = true;
-  //  }
-  //  feedback_send_ = true;  // Give the architecture time to handle feedback
-  //}
-  // else
-  //{
-  //  feedback_send_ = false;
-  //}
-
   // Get current state
   const auto current_state = planning_scene_monitor_->getStateMonitor()->getCurrentState();
 
@@ -150,19 +117,31 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
 
   // Calculate Cartesian command delta
   // Transform current pose to command frame
-  // Eigen::Isometry3d current_pose = current_state->getFrameTransform(servo_parameters_.robot_link_command_frame);
   // Transform goal pose to command frame
   servo_->setCommandType(moveit_servo::CommandType::TWIST);
   moveit_servo::TwistCommand target_twist{
     "tcp_welding_gun_link",
     { diff_pose.translation().x() * trans_gain, diff_pose.translation().y() * trans_gain,
       diff_pose.translation().z() * trans_gain, axis_angle.axis().x() * axis_angle.angle() * rot_gain,
-      axis_angle.axis().y() * axis_angle.angle() * rot_gain, 0.0 }
+      axis_angle.axis().y() * axis_angle.angle() * rot_gain, axis_angle.axis().z() * axis_angle.angle() * rot_gain }
   };
+
+  // Start DEBUG uncomment for debugging
+  // auto msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
+  // msg->header.stamp = node_->now();
+  // msg->twist.linear.x = target_twist.velocities[0];
+  // msg->twist.linear.y = target_twist.velocities[1];
+  // msg->twist.linear.z = target_twist.velocities[2];
+  // msg->twist.angular.x =target_twist.velocities[3];
+  // msg->twist.angular.y =target_twist.velocities[4];
+  // msg->twist.angular.z =target_twist.velocities[5];
+  // twist_cmd_pub_->publish(std::move(msg));
+  // End Debug
 
   std::optional<trajectory_msgs::msg::JointTrajectory> trajectory_msg;
   while (!trajectory_msg)
   {
+    // Calculate next servo command
     moveit_servo::KinematicState joint_state = servo_->getNextJointState(current_state, target_twist);
     const auto status = servo_->getStatus();
     if (status == moveit_servo::StatusCode::INVALID)
@@ -182,36 +161,6 @@ ServoSolver::solve(const robot_trajectory::RobotTrajectory& local_trajectory,
     trajectory_msg = moveit_servo::composeTrajectoryMessage(servo_parameters_, joint_cmd_rolling_window_);
   }
   local_solution = trajectory_msg.value();
-
-  // Create twist command
-  // current EE -> planning frame * planning frame -> target EE
-  // Eigen::Isometry3d diff_pose = current_pose.inverse() * target_pose;
-  // Eigen::AngleAxisd axis_angle(diff_pose.linear());
-
-  // Scale velocity
-  // constexpr double fixed_vel = 0.05;
-  // const double vel_scale = fixed_vel / diff_pose.translation().norm();
-
-  // Create twist command msg
-  // auto msg = std::make_unique<geometry_msgs::msg::TwistStamped>();
-  // msg->header.stamp = node_->now();
-  // msg->twist.linear.x = diff_pose.translation().x() * vel_scale;
-  // msg->twist.linear.y = diff_pose.translation().y() * vel_scale;
-  // The lase correction should only happen along the z axis
-  // msg->twist.linear.z = diff_pose.translation().z() * vel_scale - laser_correction_;
-  // msg->twist.angular.x = axis_angle.axis().x() * axis_angle.angle() * vel_scale;
-  // msg->twist.angular.y = axis_angle.axis().y() * axis_angle.angle() * vel_scale;
-
-  // Rotation joint is laser correction, not from delta-position
-  // msg->twist.angular.z = 0;  // laser_correction_;
-
-  // twist_cmd_pub_->publish(std::move(msg));
-
-  // Publish EEF Position
-  // geometry_msgs::msg::TransformStamped tf;
-  // if (servo_->getEEFrameTransform(tf))
-  //  ee_tf_pub_->publish(tf);
-
   return feedback_result;
 }
 }  // namespace hybrid_planning_demo
