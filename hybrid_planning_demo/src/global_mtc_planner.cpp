@@ -96,10 +96,6 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   sampling_planner->setProperty("planning_time", motion_plan_req.allowed_planning_time);
 
   // Cartesian planner
-  // auto cartesian_planner = std::make_shared<solvers::CartesianPath>();
-  // cartesian_planner->setMaxVelocityScaling(1.0);
-  // cartesian_planner->setMaxAccelerationScaling(1.0);
-  // cartesian_planner->setStepSize(.01);
 
   // Set task properties
   t.setProperty("group", "ur_manipulator");
