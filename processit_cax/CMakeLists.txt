@@ -29,7 +29,6 @@ find_package(moveit_ros_planning REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(Eigen3 REQUIRED)
 find_package(eigen3_cmake_module REQUIRED)
-find_package(tinyxml_vendor REQUIRED)
 find_package(yaml_cpp_vendor REQUIRED)
 find_package(TinyXML REQUIRED)
 
@@ -42,10 +41,8 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   moveit_ros_planning
   # moveit_visual_tools
   tf2_eigen
-  tinyxml_vendor
   Eigen3
   eigen3_cmake_module
-  tinyxml_vendor
   TinyXML
   yaml_cpp_vendor
 )
