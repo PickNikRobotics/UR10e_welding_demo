@@ -391,7 +391,6 @@ def generate_launch_description():
         "trajectory_execution.allowed_start_tolerance": 0.01,
     }
 
-
     # Compose the path to the workpiece
     workpiece_path_param = PathJoinSubstitution(
         [
