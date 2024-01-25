@@ -134,17 +134,17 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_fake_hardware",
+            "use_mock_hardware",
             default_value="false",
             description="Start robot with fake hardware mirroring command to its states.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "fake_sensor_commands",
+            "mock_sensor_commands",
             default_value="false",
             description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
+            Used only if 'use_mock_hardware' parameter is true.",
         )
     )
     declared_arguments.append(
@@ -193,8 +193,8 @@ def generate_launch_description():
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_config_file = LaunchConfiguration("moveit_config_file")
     prefix = LaunchConfiguration("prefix")
-    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
-    fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
@@ -286,11 +286,11 @@ def generate_launch_description():
             "prefix:=",
             prefix,
             " ",
-            "use_fake_hardware:=",
-            use_fake_hardware,
+            "use_mock_hardware:=",
+            use_mock_hardware,
             " ",
-            "fake_sensor_commands:=",
-            fake_sensor_commands,
+            "mock_sensor_commands:=",
+            mock_sensor_commands,
             " ",
             "use_tool_communication:=",
             use_tool_communication,
@@ -334,18 +334,47 @@ def generate_launch_description():
     robot_description_kinematics = {"robot_description_kinematics": kinematics_yaml}
 
     # Planning Configuration
-    ompl_pipeline = load_yaml("ipa_moveit_config", "config/ompl_planning.yaml")
-    ompl_pipeline["planning_plugin"] = "ompl_interface/OMPLPlanner"
-    ompl_pipeline[
-        "request_adapters"
-    ] = """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints"""
-    ompl_pipeline["start_state_max_bounds_error"] = 0.1
+    # Load additional OMPL pipeline
+    ompl_pipeline = {
+        "ompl": {
+            "planning_plugins": [
+                "ompl_interface/OMPLPlanner",
+            ],
+            "request_adapters": [
+                "default_planning_request_adapters/ResolveConstraintFrames",
+                "default_planning_request_adapters/ValidateWorkspaceBounds",
+                "default_planning_request_adapters/CheckStartStateBounds",
+                "default_planning_request_adapters/CheckStartStateCollision",
+            ],
+            "response_adapters": [
+                "default_planning_response_adapters/AddTimeOptimalParameterization",
+                "default_planning_response_adapters/ValidateSolution",
+                "default_planning_response_adapters/DisplayMotionPath",
+            ],
+        }
+    }
+    ompl_planning_yaml = load_yaml("ipa_moveit_config", "config/ompl_planning.yaml")
+    ompl_pipeline["ompl"].update(ompl_planning_yaml)
 
     pilz_industrial_planning_pipeline = {
-        "planning_plugin": "pilz_industrial_motion_planner/CommandPlanner",
-        "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-        # "request_adapters": "",
-        "start_state_max_bounds_error": 0.1,
+        "pilz_industrial_motion_planner": {
+            "planning_plugins": [
+                "pilz_industrial_motion_planner/CommandPlanner",
+            ],
+            "default_planner_config": [
+                "PTP",
+            ],
+            "request_adapters": [
+                "default_planning_request_adapters/ResolveConstraintFrames",
+                "default_planning_request_adapters/ValidateWorkspaceBounds",
+                "default_planning_request_adapters/CheckStartStateBounds",
+                "default_planning_request_adapters/CheckStartStateCollision",
+            ],
+            "response_adapters": [
+                "default_planning_response_adapters/ValidateSolution",
+                "default_planning_response_adapters/DisplayMotionPath",
+            ],
+        }
     }
 
     # Trajectory Execution Configuration
@@ -360,22 +389,6 @@ def generate_launch_description():
         "trajectory_execution.allowed_execution_duration_scaling": 1.2,
         "trajectory_execution.allowed_goal_duration_margin": 0.5,
         "trajectory_execution.allowed_start_tolerance": 0.01,
-    }
-
-    planning_scene_monitor_parameters = {
-        "publish_planning_scene": True,
-        "publish_geometry_updates": True,
-        "publish_state_updates": True,
-        "publish_transforms_updates": True,
-        "planning_scene_monitor_options": {
-            "name": "planning_scene_monitor",
-            "robot_description": "robot_description",
-            "joint_state_topic": "/joint_states",
-            "attached_collision_object_topic": "/move_group/planning_scene_monitor",
-            "publish_planning_scene_topic": "/move_group/publish_planning_scene",
-            "monitored_planning_scene_topic": "/move_group/monitored_planning_scene",
-            "wait_for_initial_state_timeout": 10.0,
-        },
     }
 
     # Compose the path to the workpiece
@@ -404,20 +417,26 @@ def generate_launch_description():
         )
     }
 
+    # Moveit_cpp config
+    moveit_cpp = {
+        "planning_pipelines": {
+            "pipeline_names": ["pilz_industrial_motion_planner"],
+        }
+    }
+
     # Start the actual move_group node/action server
     move_group_node = Node(
         package="moveit_ros_move_group",
         executable="move_group",
         output="screen",
-        name="move_group",
         parameters=[
             robot_description,
             robot_description_semantic,
             robot_description_kinematics,
-            {"move_group": pilz_industrial_planning_pipeline},
+            pilz_industrial_planning_pipeline,
             trajectory_execution,
             moveit_controllers,
-            planning_scene_monitor_parameters,
+            moveit_cpp,
             cartesian_limits_yaml,
             joint_limits_yaml,
         ],
@@ -472,7 +491,7 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
-            {"move_group": pilz_industrial_planning_pipeline},
+            pilz_industrial_planning_pipeline,
             robot_description_kinematics,
         ],
     )
@@ -554,13 +573,10 @@ def generate_launch_description():
                     global_planner_param,
                     robot_description,
                     robot_description_semantic,
-                    kinematics_yaml,
+                    robot_description_kinematics,
                     cartesian_limits_yaml,
                     welding_param,
-                    # {"ompl": ompl_pipeline},
-                    {
-                        "pilz_industrial_motion_planner": pilz_industrial_planning_pipeline
-                    },
+                    pilz_industrial_planning_pipeline,
                     cartesian_limits_yaml,
                     joint_limits_yaml,
                 ],
@@ -574,7 +590,7 @@ def generate_launch_description():
                     local_planner_param,
                     robot_description,
                     robot_description_semantic,
-                    kinematics_yaml,
+                    robot_description_kinematics,
                     servo_params,
                 ],
             ),
@@ -589,16 +605,6 @@ def generate_launch_description():
             ),
         ],
         output="screen",
-    )
-
-    # Test Node
-    test_request_node = Node(
-        package="hybrid_planning_demo",
-        executable="hybrid_planning_test_node",
-        name="hybrid_planning_test_node",
-        output="screen",
-        # prefix=["xterm -e gdb -ex run --args"],
-        parameters=[robot_description, robot_description_semantic, kinematics_yaml],
     )
 
     ##############################
@@ -625,19 +631,6 @@ def generate_launch_description():
         output="screen",
         arguments=[],
         parameters=[],
-    )
-
-    # Test Node
-    test_plugin_task_description = Node(
-        package="processit_cax",
-        executable="plugin_task_description_test_node",
-        output="screen",
-        parameters=[
-            {"workpiece_path": workpiece_path_param},
-            robot_description,
-            robot_description_semantic,
-            robot_description_kinematics,  # kinematics_yaml
-        ],
     )
 
     processit_program = Node(

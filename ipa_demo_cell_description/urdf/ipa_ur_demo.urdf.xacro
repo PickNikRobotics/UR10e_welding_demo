@@ -25,8 +25,8 @@
   <xacro:arg name="safety_limits" default="false"/>
   <xacro:arg name="safety_pos_margin" default="0.15"/>
   <xacro:arg name="safety_k_position" default="20"/>
-  <xacro:arg name="use_fake_hardware" default="false" />
-  <xacro:arg name="fake_sensor_commands" default="false" />
+  <xacro:arg name="use_mock_hardware" default="false" />
+  <xacro:arg name="mock_sensor_commands" default="false" />
   <xacro:arg name="headless_mode" default="false" />
   <xacro:arg name="initial_positions_file" default="$(find ipa_demo_cell_description)/config/$(arg robot_model)/ros2_control_initial_positions.yaml"/>
   <xacro:property name="initial_positions_file" default="$(arg initial_positions_file)"/>
@@ -45,8 +45,8 @@
     safety_limits="$(arg safety_limits)"
     safety_pos_margin="$(arg safety_pos_margin)"
     safety_k_position="$(arg safety_k_position)"
-    use_fake_hardware="$(arg use_fake_hardware)"
-    fake_sensor_commands="$(arg fake_sensor_commands)"
+    use_mock_hardware="$(arg use_mock_hardware)"
+    mock_sensor_commands="$(arg mock_sensor_commands)"
     headless_mode="$(arg headless_mode)"
     initial_positions="${xacro.load_yaml(initial_positions_file)}">
     <origin xyz="-0.350 0 0.813" rpy="0 0 ${-pi/2}" />

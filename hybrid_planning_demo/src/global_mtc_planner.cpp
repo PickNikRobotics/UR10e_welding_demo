@@ -87,19 +87,15 @@ moveit_msgs::msg::MotionPlanResponse GlobalMTCPlannerComponent::plan(
   t.loadRobotModel(node_ptr_);
 
   // Sampling planner
-  auto sampling_planner = std::make_shared<solvers::PipelinePlanner>(node_ptr_, "pilz_industrial_motion_planner");
+  auto sampling_planner =
+      std::make_shared<solvers::PipelinePlanner>(node_ptr_, "pilz_industrial_motion_planner", "LIN");
   sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
   sampling_planner->setProperty("max_velocity_scaling_factor", motion_plan_req.max_velocity_scaling_factor);
   sampling_planner->setProperty("max_acceleration_scaling_factor", motion_plan_req.max_acceleration_scaling_factor);
   sampling_planner->setProperty("planning_attempts", motion_plan_req.num_planning_attempts);
   sampling_planner->setProperty("planning_time", motion_plan_req.allowed_planning_time);
-  sampling_planner->setPlannerId("LIN");
 
   // Cartesian planner
-  auto cartesian_planner = std::make_shared<solvers::CartesianPath>();
-  cartesian_planner->setMaxVelocityScaling(1.0);
-  cartesian_planner->setMaxAccelerationScaling(1.0);
-  cartesian_planner->setStepSize(.01);
 
   // Set task properties
   t.setProperty("group", "ur_manipulator");

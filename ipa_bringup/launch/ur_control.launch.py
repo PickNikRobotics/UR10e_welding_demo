@@ -133,17 +133,17 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "use_fake_hardware",
+            "use_mock_hardware",
             default_value="false",
             description="Start robot with fake hardware mirroring command to its states.",
         )
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            "fake_sensor_commands",
+            "mock_sensor_commands",
             default_value="false",
             description="Enable fake command interfaces for sensors used for simple simulations. \
-            Used only if 'use_fake_hardware' parameter is true.",
+            Used only if 'use_mock_hardware' parameter is true.",
         )
     )
     declared_arguments.append(
@@ -185,8 +185,8 @@ def generate_launch_description():
     moveit_config_package = LaunchConfiguration("moveit_config_package")
     moveit_config_file = LaunchConfiguration("moveit_config_file")
     prefix = LaunchConfiguration("prefix")
-    use_fake_hardware = LaunchConfiguration("use_fake_hardware")
-    fake_sensor_commands = LaunchConfiguration("fake_sensor_commands")
+    use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
     launch_rviz = LaunchConfiguration("launch_rviz")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
@@ -276,11 +276,11 @@ def generate_launch_description():
             "prefix:=",
             prefix,
             " ",
-            "use_fake_hardware:=",
-            use_fake_hardware,
+            "use_mock_hardware:=",
+            use_mock_hardware,
             " ",
-            "fake_sensor_commands:=",
-            fake_sensor_commands,
+            "mock_sensor_commands:=",
+            mock_sensor_commands,
             " ",
             "use_tool_communication:=",
             use_tool_communication,
@@ -326,9 +326,20 @@ def generate_launch_description():
     # Planning Configuration
     ompl_planning_pipeline_config = {
         "move_group": {
-            "planning_plugin": "ompl_interface/OMPLPlanner",
-            "request_adapters": """default_planner_request_adapters/AddTimeOptimalParameterization default_planner_request_adapters/FixWorkspaceBounds default_planner_request_adapters/FixStartStateBounds default_planner_request_adapters/FixStartStateCollision default_planner_request_adapters/FixStartStatePathConstraints""",
-            "start_state_max_bounds_error": 0.1,
+            "planning_plugins": [
+                "ompl_interface/OMPLPlanner",
+            ],
+            "request_adapters": [
+                "default_planning_request_adapters/ResolveConstraintFrames",
+                "default_planning_request_adapters/ValidateWorkspaceBounds",
+                "default_planning_request_adapters/CheckStartStateBounds",
+                "default_planning_request_adapters/CheckStartStateCollision",
+            ],
+            "response_adapters": [
+                "default_planning_response_adapters/AddTimeOptimalParameterization",
+                "default_planning_response_adapters/ValidateSolution",
+                "default_planning_response_adapters/DisplayMotionPath",
+            ],
         }
     }
     ompl_planning_yaml = load_yaml("ipa_moveit_config", "config/ompl_planning.yaml")
@@ -381,16 +392,16 @@ def generate_launch_description():
     )
 
     # Warehouse mongodb server
-    mongodb_server_node = Node(
-        package="warehouse_ros_mongo",
-        executable="mongo_wrapper_ros.py",
-        parameters=[
-            {"warehouse_port": 33829},
-            {"warehouse_host": "localhost"},
-            {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
-        ],
-        output="screen",
-    )
+    # mongodb_server_node = Node(
+    #     package="warehouse_ros_mongo",
+    #     executable="mongo_wrapper_ros.py",
+    #     parameters=[
+    #         {"warehouse_port": 33829},
+    #         {"warehouse_host": "localhost"},
+    #         {"warehouse_plugin": "warehouse_ros_mongo::MongoDatabaseConnection"},
+    #     ],
+    #     output="screen",
+    # )
 
     control_node = Node(
         package="controller_manager",
@@ -436,7 +447,7 @@ def generate_launch_description():
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "joint_state_broadcaster",
             "--controller-manager",
@@ -446,13 +457,13 @@ def generate_launch_description():
 
     io_and_status_controller_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=["io_and_status_controller", "-c", "/controller_manager"],
     )
 
     speed_scaling_state_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "speed_scaling_state_broadcaster",
             "--controller-manager",
@@ -462,7 +473,7 @@ def generate_launch_description():
 
     force_torque_sensor_broadcaster_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[
             "force_torque_sensor_broadcaster",
             "--controller-manager",
@@ -472,7 +483,7 @@ def generate_launch_description():
 
     robot_controller_spawner = Node(
         package="controller_manager",
-        executable="spawner.py",
+        executable="spawner",
         arguments=[robot_controller, "-c", "/controller_manager"],
     )
 
@@ -487,7 +498,7 @@ def generate_launch_description():
         force_torque_sensor_broadcaster_spawner,
         robot_controller_spawner,
         move_group_node,
-        mongodb_server_node,
+        # mongodb_server_node,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)
